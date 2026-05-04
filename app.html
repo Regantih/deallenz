@@ -244,7 +244,7 @@ function go(v){document.querySelectorAll('.view').forEach(e=>e.classList.remove(
 const dropZone=$('dropZone');
 dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.classList.add('dragover')});
 dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('dragover'));
-dropZone.addEventListener('drop',e=>{e.preventDefault();dropZone.classList.remove('dragover');handleFiles(e.dataTransfer.files)});
+dropZone.addEventListener('drop',e=>{e.preventDefault();dropZone.classList.remove('dragover');handleFiles(e.dataTransfer.files)}); dropZone.addEventListener('click',()=>document.getElementById('fileInput').click());
 
 function handleFiles(files){for(const f of files){const ext=f.name.split('.').pop().toLowerCase();const src={id:Date.now()+Math.random(),type:ext.toUpperCase(),name:f.name,size:(f.size/1024).toFixed(1)+'KB',status:'parsed',content:''};if(['txt','md','csv'].includes(ext)){const reader=new FileReader();reader.onload=e=>{src.content=e.target.result;parseSourceContent(src)};reader.readAsText(f)}else{src.content='[Binary file: '+f.name+' - '+src.size+']';parseSourceContent(src)}sources.push(src);log('intake','intake-agent','File ingested: '+f.name+' ('+src.size+')');}renderSources();}
 
