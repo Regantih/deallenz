@@ -234,7 +234,7 @@ let R={},sources=[],trace=[],enrichData={},traceFilter='all',selectedQs=new Set(
 const DEAL_FIELDS=['company','stage','sector','hq','website','thesis','ask','wtp','founders','arr','mom','nrr','founded','totalRaised','leadInvestor','icp','pricing','teamSize'];
 const sleep=(ms)=>new Promise(r=>setTimeout(r,ms));
 const ts=()=>{const d=new Date();return d.toTimeString().split(' ')[0]+'.'+String(d.getMilliseconds()).padStart(3,'0')};
-function log(type,agent,msg,detail=''){trace.push({time:ts(),type,agent:agent||'',msg,detail:detail||''});$('logCount').textContent=trace.length;$('logBadge').textContent=trace.length;}
+function log(type,agent,msg,detail=''){trace.push({time:ts(),type,agent:agent||'',msg,detail:detail||''});$('logBadge').textContent=trace.length;$('logBadge').textContent=trace.length;}
 const $=id=>document.getElementById(id);
 
 // ===== NAVIGATION =====
