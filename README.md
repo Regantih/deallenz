@@ -5,11 +5,35 @@
 
 ## What it is
 
-DealLens turns a raw deck or data-room into a publishable, narratively-structured investment memo — a single-column scrollytelling journey through seven fixed chapters:
+DealLens turns a raw deck or data-room into a publishable, narratively-structured investment memo — a single-column scrollytelling journey through fourteen fixed chapters grouped into five acts.
 
-**Company → Market → Team → Traction → Moat → Risks → Verdict**
+### The five acts and fourteen chapters
 
-Each chapter is hydrated by an agent stack (`gstack`), grounded in evidence (`autoresearch`), explained at depth (`feynman`), and scored on a multi-axis founder rubric (`evaluation`).
+**Act I — Why** (the demand-side truth)
+1. The Customer — ICP, willingness-to-pay, JTBD
+2. The Problem — quantified pain, status-quo cost, urgency
+3. The Solution — wedge, defensible insight, product flow
+
+**Act II — What** (the opportunity)
+4. The Company — founding story, thesis, stage, ask
+5. The Market — TAM/SAM/SOM, growth, segmentation
+6. The Competition — direct, indirect, substitutes, positioning
+
+**Act III — Who** (the operators)
+7. The Team — founder cards + 7-axis radar
+
+**Act IV — How** (the engine and the world it runs in)
+8. The Traction — ARR, retention, NDR, burn multiple, payback
+9. The Moat — data, network, regulatory, brand, switching cost
+10. The Macro — rates, inflation, capital flows, sector cycle
+11. The Micro — unit economics: CAC, LTV, GM, contribution
+12. The Geopolitics — supply chain, sanctions, data residency, tariffs
+
+**Act V — So what** (the call)
+13. The Risks — heatmap (market/team/tech/regulatory/financial/exit)
+14. The Verdict — composite score + Pass / Track / Invest
+
+Each chapter is hydrated by an agent stack (`gstack`), grounded in evidence (`autoresearch`) with at least one cited claim, explained at depth (`feynman`), and — where applicable — scored (`evaluation`).
 
 ## Architecture
 
@@ -39,20 +63,22 @@ deallenz/
 | LLM | Primary + fallback model routing |
 | Hosting | GitHub Pages + Firebase |
 
-## Chapters
-
-1. The Company — thesis pin
-2. The Market — TAM/SAM/SOM bubbles
-3. The Team — founder cards + 7-axis radar
-4. The Traction — ARR/retention/burn chart
-5. The Moat — layered defensibility
-6. The Risks — scroll-revealed heatmap
-7. The Verdict — composite score + Pass/Track/Invest
-
 ## Team evaluation (7 axes)
 
 Domain fit · Prior exits · Technical depth · GTM · Grit · Coachability · Equity alignment.
 Each 1–5 with cited evidence; composite weighted by stage.
+
+## Unit-economics formulas (locked)
+
+- CAC = S&M spend / new customers acquired
+- LTV = ARPU × GM% / churn
+- Payback = CAC / (ARPU × GM%)
+- Burn Multiple = Net Burn / Net New ARR
+- NDR = (Starting ARR + Expansion − Churn − Contraction) / Starting ARR
+
+## Macro / Geo data sources
+
+FRED (rates), World Bank (GDP), OFAC (sanctions), BIS (capital flows), USTR (tariffs).
 
 ## Documentation
 
