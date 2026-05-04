@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Pipeline · DealLens</title>
+<style>
+:root{--ink:#1a1a1a;--paper:#f5f1e8;--rule:#d8d2c2;--accent:#8b6f3d;--mute:#6b6358;--card:#fbfbf8;--ok:#2f7d4f;--err:#9b2c2c}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:Georgia,'Times New Roman',serif;line-height:1.55}
+header.top{padding:18px 32px;border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center;background:var(--paper);position:sticky;top:0;z-index:10}
+header.top a{color:var(--ink);text-decoration:none;font-weight:700}
+header.top nav a{margin-left:24px;font-weight:400;color:var(--mute)}
+header.top nav a.active{color:var(--ink);font-weight:600}
+.wrap{max-width:1200px;margin:32px auto;padding:0 32px}
+h1{font-size:40px;line-height:1.1;margin:0 0 8px}
+.lede{color:var(--mute);font-size:17px;margin:0 0 24px;max-width:720px}
+.kicker{font-family:'Courier New',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+.grid{display:grid;grid-template-columns:1fr 360px;gap:32px}
+.agents{display:flex;flex-direction:column;gap:18px}
+.agent{background:var(--card);border:1px solid var(--rule);border-radius:6px;padding:20px}
+.ah{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.agent h2{margin:0;font-size:22px}
+.role{color:var(--mute);font-size:13px;margin:0 0 12px}
+.status{font-family:'Courier New',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:99px;border:1px solid var(--rule);color:var(--mute)}
+.status.run{color:var(--accent);border-color:var(--accent)}
+.status.ok{color:var(--ok);border-color:var(--ok)}
+.log{background:#1a1a1a;color:#e8e4d8;font-family:'Courier New',monospace;font-size:12px;padding:12px;border-radius:4px;max-height:200px;overflow:auto;white-space:pre-wrap;margin:8px 0;display:none}
+.log.show{display:block}
+.evidence{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:10px}
+.ev{border:1px solid var(--rule);border-radius:4px;padding:10px;font-size:13px;background:var(--paper)}
+.ev b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);margin-bottom:4px}
+aside{background:var(--card);border:1px solid var(--rule);border-radius:6px;padding:20px;height:fit-content;position:sticky;top:90px}
+aside h3{margin:0 0 12px;font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+.row{display:flex;justify-content:space-between;border-bottom:1px dashed var(--rule);padding:6px 0;font-size:14px}
+.row span:first-child{font-family:'Courier New',monospace;font-size:11px;text-transform:uppercase;color:var(--mute);letter-spacing:.08em}
+.row span:last-child{text-align:right;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+button{font-family:Georgia,serif;font-size:15px;padding:10px 18px;border:1px solid var(--ink);background:var(--ink);color:var(--paper);cursor:pointer;border-radius:4px;width:100%;margin-bottom:8px}
+button.ghost{background:var(--paper);color:var(--ink)}
+button:disabled{opacity:.4;cursor:not-allowed}
+.bar{display:flex;gap:12px;margin-bottom:24px;align-items:center;flex-wrap:wrap}
+.bar button{width:auto}
+.meta{color:var(--mute);font-size:13px;font-family:'Courier New',monospace}
+.empty{padding:20px;text-align:center;color:var(--mute);background:var(--card);border:1px dashed var(--rule);border-radius:6px}
+.tools{font-family:'Courier New',monospace;font-size:11px;color:var(--mute);letter-spacing:.08em}
+</style>
+</head>
+<body>
+<header class="top">
+  <a href="index.html">DealLens · Marketlogic Investors</a>
+  <nav>
+    <a href="deal.html">Memo</a>
+    <a href="pipeline.html" class="active">Pipeline</a>
+    <a href="submit.html">Submit</a>
+    <a href="deals.html">Vault</a>
+  </nav>
+</header>
+<div class="wrap">
+  <div class="kicker">04 · ENRICHMENT</div>
+  <h1>Agents at work.</h1>
+  <p class="lede">Four specialist agents take the intake record, hit their tools, cite evidence, and hand a structured payload to the memo writer.</p>
+  <div class="bar">
+    <button id="runAll">Run all agents</button>
+    <button id="reset" class="ghost">Reset</button>
+    <span class="meta" id="meta">No deal loaded</span>
+  </div>
+  <div class="grid">
+    <div class="agents" id="agents"></div>
+    <aside>
+      <h3>Live record</h3>
+      <div id="record"><div class="empty">Submit a deal first.</div></div>
+      <div style="margin-top:16px">
+        <button onclick="location.href='submit.html'" class="ghost">← Back to intake</button>
+        <button id="toMemo" disabled>Write memo →</button>
+      </div>
+    </aside>
+  </div>
+</div>
+<script>
+const AGENTS=[
+ {id:'ingest',name:'Ingest Agent',role:'Normalizes the intake record, validates schema, dedupes against the vault.',tools:['schema.validate','vault.lookup','record.normalize']},
+ {id:'research',name:'Research Agent',role:'Pulls market signals, comps, and recent news. Cites every claim.',tools:['web.search','crunchbase.lookup','news.recent']},
+ {id:'team',name:'Team Agent',role:'Scores founders on domain fit, prior outcomes, and execution velocity.',tools:['linkedin.profile','github.activity','team.score']},
+ {id:'unitecon',name:'Unit-Econ Agent',role:'Builds bottoms-up model: ARR, GM, CAC payback, burn multiple, runway.',tools:['model.build','sensitivity.run','benchmark.compare']}
+];
+const $=id=>document.getElementById(id);
+const rec=()=>{try{return JSON.parse(localStorage.getItem('deallens:record')||'{}')}catch(e){return{}}};
+const saveEnrich=(id,out)=>{const e=JSON.parse(localStorage.getItem('deallens:enrich')||'{}');e[id]=out;localStorage.setItem('deallens:enrich',JSON.stringify(e))};
+const FIELDS=['company','stage','sector','hq','website','thesis','ask','wtp','founders','arr','mom','nrr'];
+function renderRecord(){const r=rec();const el=$('record');if(!r.company){el.innerHTML='<div class="empty">Submit a deal first.</div>';$('meta').textContent='No deal loaded';return}
+ el.innerHTML=FIELDS.map(f=>`<div class="row"><span>${f}</span><span>${r[f]||'—'}</span></div>`).join('');
+ $('meta').textContent=`Loaded: ${r.company} · ${r.stage||'?'} · ${r.sector||'?'}`}
+function renderAgents(){$('agents').innerHTML=AGENTS.map(a=>`<div class="agent" id="a-${a.id}"><div class="ah"><h2>${a.name}</h2><span class="status" id="s-${a.id}">idle</span></div><p class="role">${a.role}</p><div class="tools">TOOLS · ${a.tools.join(' · ')}</div><div class="log" id="l-${a.id}"></div><div class="evidence" id="e-${a.id}"></div></div>`).join('')}
+function setStatus(id,s,cls){const el=$('s-'+id);el.textContent=s;el.className='status '+(cls||'')}
+function log(id,line){const el=$('l-'+id);el.classList.add('show');el.textContent+=line+'\n';el.scrollTop=el.scrollHeight}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+async function runAgent(a){const r=rec();setStatus(a.id,'running','run');log(a.id,`[${new Date().toISOString().slice(11,19)}] boot → loading record for ${r.company||'?'}`);
+ for(const t of a.tools){await sleep(400+Math.random()*600);log(a.id,`  → tool: ${t}() … ok`)}
+ const out=mockOutput(a.id,r);log(a.id,`[done] emitted ${out.evidence.length} evidence items`);
+ $('e-'+a.id).innerHTML=out.evidence.map(e=>`<div class="ev"><b>${e.label}</b>${e.value}</div>`).join('');
+ saveEnrich(a.id,out);setStatus(a.id,'complete','ok')}
+function mockOutput(id,r){const c=r.company||'TargetCo';const s=r.sector||'fintech';
+ if(id==='ingest')return{evidence:[{label:'schema',value:'valid'},{label:'duplicates',value:'none in vault'},{label:'completeness',value:'82%'}]};
+ if(id==='research')return{evidence:[{label:'TAM',value:`$${(8+Math.random()*40).toFixed(1)}B (${s})`},{label:'comps',value:'3 public, 5 private'},{label:'news',value:`${c} raised seed Q1 26`},{label:'sources',value:'12 cited'}]};
+ if(id==='team')return{evidence:[{label:'domain fit',value:'8.4 / 10'},{label:'prior exits',value:'1 (acqui-hire)'},{label:'github velocity',value:'47 commits/wk'}]};
+ if(id==='unitecon')return{evidence:[{label:'ARR',value:r.arr||'$1.2M'},{label:'GM',value:'74%'},{label:'CAC payback',value:'14 mo'},{label:'burn multiple',value:'1.6x'},{label:'runway',value:'19 mo'}]};
+ return{evidence:[]}}
+async function runAll(){if(!rec().company){alert('Submit a deal first.');return}
+ $('runAll').disabled=true;for(const a of AGENTS)await runAgent(a);$('toMemo').disabled=false;$('runAll').disabled=false}
+$('runAll').onclick=runAll;
+$('reset').onclick=()=>{localStorage.removeItem('deallens:enrich');renderAgents();$('toMemo').disabled=true};
+$('toMemo').onclick=()=>location.href='deal.html';
+renderAgents();renderRecord();
+</script>
+</body>
+</html>
