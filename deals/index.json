@@ -1,0 +1,4 @@
+[
+  {"id":"pqc-bank","name":"PQC Bank","stage":"seed","sector":"fintech","status":"memo-ready"},
+  {"id":"acme-finance","name":"Acme Finance","stage":"series-a","sector":"vertical SaaS","status":"enriching"}
+]
