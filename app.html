@@ -238,7 +238,7 @@ function log(type,agent,msg,detail=''){trace.push({time:ts(),type,agent:agent||'
 const $=id=>document.getElementById(id);
 
 // ===== NAVIGATION =====
-function go(v){document.querySelectorAll('.view').forEach(e=>e.classList.remove('show'));$('v-'+v).classList.add('show');document.querySelectorAll('nav a').forEach(a=>{a.classList.toggle('on',a.textContent.toLowerCase().includes(v.replace('callprep','call').replace('memo','ic')||v))});log('decision','system','Navigated to '+v);if(v==='logs')renderLogs();if(v==='callprep')renderQuestionBank();}
+function go(v){document.querySelectorAll('.view').forEach(e=>e.classList.remove('show'));$('v-'+v).classList.add('show');document.querySelectorAll('nav a').forEach(a=>{a.classList.toggle('on',a.textContent.toLowerCase().includes(v.replace('callprep','call').replace('memo','ic')||v))});log('decision','system','Navigated to '+v);if(v==='logs')renderLogs();if(v==='callprep')renderQuestionBank();if(v==='pipeline'&&R.company)renderPipeline();if(v==='dossier'&&R.company)buildDossier();}
 
 // ===== INTAKE: FILE HANDLING =====
 const dropZone=$('dropZone');
@@ -580,7 +580,7 @@ function go(v){
   document.querySelectorAll('nav a')[navMap[v]]?.classList.add('on');
   log('decision','system','Navigated to '+v);
   if(v==='logs')renderLogs();
-  if(v==='callprep')renderQuestionBank();
+  if(v==='callprep')renderQuestionBank();if(v==='pipeline'&&R.company)renderPipeline();if(v==='dossier'&&R.company)buildDossier();
   window.scrollTo(0,0);
 }
 </script></body></html>
