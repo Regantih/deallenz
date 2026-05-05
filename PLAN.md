@@ -25,7 +25,7 @@ Five layers (Interface > Orchestration > Agent Swarms > Knowledge > Governance),
 
 ### Bug Fixes
 - logCount -> logBadge reference error (commit cc5e20e)
-- dropZone click handler for file upload (commit 33126cc)
+- dropZone click handler for file upload (commit 33126cc) - Pipeline/Dossier not rendering on direct nav tab click — added renderPipeline() and buildDossier() to go() (commit a1cbb2b)
 
 ### Architecture
 - Single-file HTML app (app.html) with inline CSS/JS
