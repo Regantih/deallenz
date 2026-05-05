@@ -23,6 +23,10 @@ Five layers (Interface > Orchestration > Agent Swarms > Knowledge > Governance),
 - [x] Upload fix: click handler on dropZone (commit 33126cc)
 - [x] Scope doc: docs/Multi_Agent_VC_Platform_Scope.md committed
 
+
+### New Features
+- [x] IC Memo, Industry Thesis, and Audit Trail download exports (Markdown format)
+- [x] Export buttons on IC Memo tab for IC committee distribution
 ### Bug Fixes
 - logCount -> logBadge reference error (commit cc5e20e)
 - dropZone click handler for file upload (commit 33126cc) - Pipeline/Dossier not rendering on direct nav tab click — added renderPipeline() and buildDossier() to go() (commit a1cbb2b)
