@@ -565,56 +565,11 @@ function renderLogs(){
   $('traceList').innerHTML=filtered.map(e=>'<div class="trace-item"><div class="t-time">'+e.time+'</div><div class="t-icon '+e.type.charAt(0).toUpperCase()+'">'+e.type.charAt(0).toUpperCase()+'</div><div class="t-body"><div class="t-label">'+e.type.toUpperCase()+' · '+e.agent.toUpperCase()+'</div><div class="t-msg">'+e.msg+'</div>'+(e.detail?'<div class="t-detail" onclick="this.textContent=this.textContent===\'show detail\'?\''+ e.detail+'\':\'show detail\'">show detail</div>':'')+'</div></div>').join('');
 }
 function setTraceFilter(f){traceFilter=f;renderLogs();}
-function dlFile(n,c,t){const b=new Blob([c],{type:t||'text/markdown'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=n;document.body.appendChild(a);a.click();document.body.removeChild(a)}function exportMemoDoc(){const c=R.company||'Deal';const d=new Date().toLocaleDateString();let m='# IC Investment Memo: '+c+'
-
-Prepared by DealLens for Marketlogic Investors
-Date: '+d+'
-Stage: '+(R.stage||'TBD')+' | Sector: '+(R.sector||'TBD')+' | Ask: '+(R.ask||'TBD')+'
-
----
-
-## 1. Investment Thesis
-
-'+(R.thesis||'Thesis pending.')+'
-
-';const ag=['research','team','uniteco','competition','risk'];const ti=['Market','Team','Unit Economics','Competition','Risks'];ag.forEach((a,i)=>{m+='## '+(i+2)+'. '+ti[i]+'
-
-';(enrichData[a]||[]).forEach(e=>{m+='- **'+e.label+':** '+e.value+'
-'});m+='
-'});m+='## 7. IC Recommendation
-
-Based on '+Object.keys(enrichData).length+' enrichment agents, this analysis supports advancing '+c+' to due diligence.
-
-Conditions: Successful founder call, customer reference checks, financial model validation.
-Evidence base: '+trace.length+' logged events across '+sources.length+' sources.
-';dlFile('IC_Memo_'+c.replace(/\s+/g,'_')+'.md',m)}function exportThesisDoc(){const c=R.company||'Deal';let m='# Industry Thesis: '+c+'
-
-Sector: '+(R.sector||'TBD')+'
-Stage: '+(R.stage||'TBD')+'
-
-';['research','competition','risk','team','uniteco'].forEach(a=>{m+='## '+a.charAt(0).toUpperCase()+a.slice(1)+'
-
-';(enrichData[a]||[]).forEach(e=>{m+='- **'+e.label+':** '+e.value+'
-'});m+='
-'});dlFile('Industry_Thesis_'+c.replace(/\s+/g,'_')+'.md',m)}function exportAuditTrail(){const c=R.company||'Deal';let m='# Audit Trail: '+c+'
-
-Total Events: '+trace.length+'
-Sources: '+sources.length+'
-
-## Deal Record
-
-';Object.entries(R).forEach(([k,v])=>{if(v)m+='- **'+k+':** '+v+'
-'});m+='
-## Agent Evidence
-
-';Object.entries(enrichData).forEach(([a,evs])=>{m+='### '+a+'
-
-';(evs||[]).forEach(e=>{m+='- **'+e.label+':** '+e.value+'
-'});m+='
-'});m+='## Decision Trace
-
-';trace.forEach(e=>{m+='- ['+e.time+'] '+e.type+' ('+e.agent+'): '+e.msg+'
-'});dlFile('Audit_Trail_'+c.replace(/\s+/g,'_')+'.md',m)}function exportLogs(){const blob=new Blob([JSON.stringify({deal:R,sources:sources.length,trace:trace},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='deallens-trace-'+(R.company||'deal')+'.json';a.click();}
+function dlFile(n,c,t){var b=new Blob([c],{type:t||'text/markdown'});var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=n;document.body.appendChild(a);a.click();document.body.removeChild(a)}
+function exportMemoDoc(){var c=R.company||'Deal';var d=new Date().toLocaleDateString();var N=String.fromCharCode(10);var m=['# IC Investment Memo: '+c,N,'Prepared by DealLens for Marketlogic Investors','Date: '+d,'Stage: '+(R.stage||'TBD')+' | Sector: '+(R.sector||'TBD')+' | Ask: '+(R.ask||'TBD'),N,'---',N,'## 1. Investment Thesis',N,(R.thesis||'Thesis pending.'),N];var ag=['research','team','uniteco','competition','risk'];var ti=['Market','Team','Unit Economics','Competition','Risks'];ag.forEach(function(a,i){m.push('## '+(i+2)+'. '+ti[i],N);(enrichData[a]||[]).forEach(function(e){m.push('- **'+e.label+':** '+e.value)});m.push(N)});m.push('## 7. IC Recommendation',N,'Based on '+Object.keys(enrichData).length+' enrichment agents, this analysis supports advancing '+c+' to due diligence.',N,'Conditions: Successful founder call, customer reference checks, financial model validation.','Evidence base: '+trace.length+' logged events across '+sources.length+' sources.');dlFile('IC_Memo_'+c.replace(/\s+/g,'_')+'.md',m.join(N))}
+function exportThesisDoc(){var c=R.company||'Deal';var N=String.fromCharCode(10);var m=['# Industry Thesis: '+c,N,'Sector: '+(R.sector||'TBD'),'Stage: '+(R.stage||'TBD'),N];['research','competition','risk','team','uniteco'].forEach(function(a){m.push('## '+a.charAt(0).toUpperCase()+a.slice(1),N);(enrichData[a]||[]).forEach(function(e){m.push('- **'+e.label+':** '+e.value)});m.push(N)});dlFile('Industry_Thesis_'+c.replace(/\s+/g,'_')+'.md',m.join(N))}
+function exportAuditTrail(){var c=R.company||'Deal';var N=String.fromCharCode(10);var m=['# Audit Trail: '+c,N,'Total Events: '+trace.length,'Sources: '+sources.length,N,'## Deal Record',N];Object.entries(R).forEach(function(p){if(p[1])m.push('- **'+p[0]+':** '+p[1])});m.push(N,'## Agent Evidence',N);Object.entries(enrichData).forEach(function(p){m.push('### '+p[0],N);(p[1]||[]).forEach(function(e){m.push('- **'+e.label+':** '+e.value)});m.push(N)});m.push('## Decision Trace',N);trace.forEach(function(e){m.push('- ['+e.time+'] '+e.type+' ('+e.agent+'): '+e.msg)});dlFile('Audit_Trail_'+c.replace(/\s+/g,'_')+'.md',m.join(N))}
+function exportLogs(){const blob=new Blob([JSON.stringify({deal:R,sources:sources.length,trace:trace},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='deallens-trace-'+(R.company||'deal')+'.json';a.click();}
 
 // ===== INIT =====
 log('decision','system','App initialized');
