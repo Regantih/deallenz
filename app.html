@@ -214,7 +214,7 @@ button.ghost{background:var(--paper);color:var(--ink)}
 <div id="memoPills" class="pills"></div>
 <div id="memoTitle"></div>
 <div id="memoSub"></div>
-<div id="memoBody"></div>
+<div id="memoBody"></div><div style="margin:32px 0;display:flex;gap:12px;flex-wrap:wrap"><button class="ghost" onclick="exportMemoDoc()">Download IC Memo</button><button class="ghost" onclick="exportThesisDoc()">Download Industry Thesis</button><button class="ghost" onclick="exportAuditTrail()">Download Audit Trail</button></div>
 </div>
 
 <!-- ====== 6. LOGS ====== -->
@@ -565,7 +565,56 @@ function renderLogs(){
   $('traceList').innerHTML=filtered.map(e=>'<div class="trace-item"><div class="t-time">'+e.time+'</div><div class="t-icon '+e.type.charAt(0).toUpperCase()+'">'+e.type.charAt(0).toUpperCase()+'</div><div class="t-body"><div class="t-label">'+e.type.toUpperCase()+' · '+e.agent.toUpperCase()+'</div><div class="t-msg">'+e.msg+'</div>'+(e.detail?'<div class="t-detail" onclick="this.textContent=this.textContent===\'show detail\'?\''+ e.detail+'\':\'show detail\'">show detail</div>':'')+'</div></div>').join('');
 }
 function setTraceFilter(f){traceFilter=f;renderLogs();}
-function exportLogs(){const blob=new Blob([JSON.stringify({deal:R,sources:sources.length,trace:trace},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='deallens-trace-'+(R.company||'deal')+'.json';a.click();}
+function dlFile(n,c,t){const b=new Blob([c],{type:t||'text/markdown'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=n;document.body.appendChild(a);a.click();document.body.removeChild(a)}function exportMemoDoc(){const c=R.company||'Deal';const d=new Date().toLocaleDateString();let m='# IC Investment Memo: '+c+'
+
+Prepared by DealLens for Marketlogic Investors
+Date: '+d+'
+Stage: '+(R.stage||'TBD')+' | Sector: '+(R.sector||'TBD')+' | Ask: '+(R.ask||'TBD')+'
+
+---
+
+## 1. Investment Thesis
+
+'+(R.thesis||'Thesis pending.')+'
+
+';const ag=['research','team','uniteco','competition','risk'];const ti=['Market','Team','Unit Economics','Competition','Risks'];ag.forEach((a,i)=>{m+='## '+(i+2)+'. '+ti[i]+'
+
+';(enrichData[a]||[]).forEach(e=>{m+='- **'+e.label+':** '+e.value+'
+'});m+='
+'});m+='## 7. IC Recommendation
+
+Based on '+Object.keys(enrichData).length+' enrichment agents, this analysis supports advancing '+c+' to due diligence.
+
+Conditions: Successful founder call, customer reference checks, financial model validation.
+Evidence base: '+trace.length+' logged events across '+sources.length+' sources.
+';dlFile('IC_Memo_'+c.replace(/\s+/g,'_')+'.md',m)}function exportThesisDoc(){const c=R.company||'Deal';let m='# Industry Thesis: '+c+'
+
+Sector: '+(R.sector||'TBD')+'
+Stage: '+(R.stage||'TBD')+'
+
+';['research','competition','risk','team','uniteco'].forEach(a=>{m+='## '+a.charAt(0).toUpperCase()+a.slice(1)+'
+
+';(enrichData[a]||[]).forEach(e=>{m+='- **'+e.label+':** '+e.value+'
+'});m+='
+'});dlFile('Industry_Thesis_'+c.replace(/\s+/g,'_')+'.md',m)}function exportAuditTrail(){const c=R.company||'Deal';let m='# Audit Trail: '+c+'
+
+Total Events: '+trace.length+'
+Sources: '+sources.length+'
+
+## Deal Record
+
+';Object.entries(R).forEach(([k,v])=>{if(v)m+='- **'+k+':** '+v+'
+'});m+='
+## Agent Evidence
+
+';Object.entries(enrichData).forEach(([a,evs])=>{m+='### '+a+'
+
+';(evs||[]).forEach(e=>{m+='- **'+e.label+':** '+e.value+'
+'});m+='
+'});m+='## Decision Trace
+
+';trace.forEach(e=>{m+='- ['+e.time+'] '+e.type+' ('+e.agent+'): '+e.msg+'
+'});dlFile('Audit_Trail_'+c.replace(/\s+/g,'_')+'.md',m)}function exportLogs(){const blob=new Blob([JSON.stringify({deal:R,sources:sources.length,trace:trace},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='deallens-trace-'+(R.company||'deal')+'.json';a.click();}
 
 // ===== INIT =====
 log('decision','system','App initialized');
