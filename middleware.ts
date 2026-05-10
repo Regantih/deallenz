@@ -8,7 +8,7 @@
  *   2. Redirect unauthenticated users away from protected routes to /login.
  *
  * Public routes (no auth required):
- *   /login  /signup  /auth/callback
+ *   /  /login  /signup  /pricing  /auth/callback  /api/health
  *   All static assets: *.html, *.css, *.js, *.ico, *.png, *.jpg, *.svg, *.json
  *   Next.js internals: /_next/
  *
@@ -20,8 +20,17 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-/** Routes that are accessible without authentication */
-const PUBLIC_PATH_PREFIXES = ['/login', '/signup', '/auth/callback'];
+/**
+ * Routes that are accessible without authentication.
+ * Order matters for startsWith() matching — more-specific prefixes first.
+ */
+const PUBLIC_PATH_PREFIXES = [
+  '/login',
+  '/signup',
+  '/pricing',
+  '/api/health',
+  '/auth/callback',
+];
 
 /** File extensions that are always public (static assets) */
 const STATIC_EXT_RE = /\.(html|css|js|map|ico|png|jpg|jpeg|gif|webp|svg|json|woff2?|ttf)$/i;
@@ -85,10 +94,9 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   /*
-   * Match all request paths EXCEPT:
-   *   - _next/static  (Next.js static bundle)
-   *   - _next/image   (Next.js image optimisation)
-   *   - favicon.ico
+   * Match all request paths EXCEPT the Next.js build artefacts and favicon.
+   * /pricing and /api/health are matched here but allowed through because
+   * isPublicPath() returns true for them — they will never redirect to /login.
    */
   matcher: [
     '/((?!_next/static|_next/image|favicon\.ico).*)',
