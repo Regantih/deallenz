@@ -1,8 +1,7 @@
 # DealLens — Build Status
 
 > **Last updated:** 2026-05-10  
-> **Commit:** `pr7/real-wire` tip (build green — both package pins applied; previously `59d0b27` at time of first draft)  
-> **Commit:** `59d0b27` (pr7/real-wire tip at time of writing)  
+> **Commit:** `pr8/public-routes-health` tip  
 > **Maintainer rule:** Every meaningful change must update this file. See [docs/DOCS_DISCIPLINE.md](./DOCS_DISCIPLINE.md).
 
 ---
@@ -42,7 +41,11 @@
 - [x] `tsconfig.json` — strict, bundler module resolution, `@/*` path alias **[PR#6]**
 - [x] `tsconfig.lib.json` — NodeNext resolution for standalone `lib/` + `api/` compilation **[PR#6]**
 - [x] `next.config.ts` — minimal; legacy `.html` files unaffected **[PR#6]**
-- [x] `middleware.ts` — session refresh on every request; unauthenticated → `/login?next=` **[PR#6]**
+- [x] `middleware.ts` — session refresh on every request; unauthenticated → `/login?next=`; `/pricing` and `/api/health` explicitly public **[PR#8]**
+
+### Public routes (no auth required)
+- [x] `GET /api/health` — always-200 JSON `{ status, commit, time }`; excluded from auth gating **[PR#8]**
+- [x] `app/pricing/page.tsx` — Free Trial → Pro pricing tiers, FAQ, ToS link, Subscribe CTA **[PR#8]**
 
 ### Supabase Auth
 - [x] `lib/supabase/browser.ts` — singleton `createBrowserClient`, throws if env vars absent **[PR#6]**
@@ -68,7 +71,7 @@
 - [x] `GET /api/usage` — plan, `is_owner`, monthly counters, `within_limits` **[PR#6]**
 - [x] `POST /api/ingest-link` — auth + ownership check, validates URL, classifies source, enqueues to `SupabaseJobsQueue` **[PR#7]**
 - [x] `POST /api/jobs/worker` — claims one job, `queued→running→done/failed`, processes `generic_webpage` (fetch + Storage upload) **[PR#7]**
-- [x] `GET /api/health` — pings Supabase (SELECT profiles) + Anthropic (1-token ping); 200/503 **[PR#7]**
+- [x] `GET /api/health` — **PUBLIC** always-200 `{ status, commit, time }` — no auth, no redirect **[PR#8]**
 
 ### LLM routing (MVI)
 - [x] `lib/llm.ts` — `ModelRouter` interface, `CostEntry`/`CostLedger` types, `resolveTier()`, `estimateUsd()`, tier catalogue **[PR#4 / updated PR#7]**
@@ -110,6 +113,7 @@
 - [x] `docs/DECISIONS.md` — D-001 through D-033 **[PR#6]**
 - [x] `docs/PR7_STATUS.md` — real vs mocked breakdown **[PR#7]**
 - [x] `docs/MERGE_READINESS.md` — per-PR status, conflict graph, gap analysis **[PR#7]**
+- [x] `docs/BUILD_STATUS.md` — PR8 entry added **[PR#8]**
 
 ---
 
@@ -117,34 +121,28 @@
 
 | Item | Branch | PR | Status |
 |---|---|---|---|
-| Real Supabase + real Anthropic (PR7) | `pr7/real-wire` | [#7](https://github.com/Regantih/deallenz/pull/7) | 🟢 **Vercel build green** — `next@15.3.9` + `vercel.json` framework pin applied; awaiting merge |
-| Build status docs (this PR) | `docs/build-status` | [#8](https://github.com/Regantih/deallenz/pull/8) | ✅ Merged into main |
-| Item | Branch | PR | Blocker |
-|---|---|---|---|
-| Real Supabase + real Anthropic (PR7) | `pr7/real-wire` | [#7](https://github.com/Regantih/deallenz/pull/7) | **Vercel build failing** — `@anthropic-ai/sdk@^0.39.0` version may not exist on npm; pull logs via `npx vercel inspect dpl_8zumMjZTVHqqRTqDJGLKY5DL4eFF --logs` |
-| Build status docs (this PR) | `docs/build-status` | [#8](https://github.com/Regantih/deallenz/pull/8) | Awaiting merge instruction |
+| Public routes + health (PR8) | `pr8/public-routes-health` | open | 🟡 Awaiting Vercel preview |
+| Real Supabase + real Anthropic (PR7) | `pr7/real-wire` | [#7](https://github.com/Regantih/deallenz/pull/7) | 🟢 **Vercel build green** — awaiting merge |
 
 ---
 
 ## Pending / not started (prioritised)
 
-1. **Merge PR #7** — Vercel build now green; no conflicts after this merge commit.
-1. **Fix PR #7 Vercel build** — pin `@anthropic-ai/sdk` to correct available version; re-push fixup commit.
+1. **Merge PR #8** — public `/pricing` and `/api/health`; zero merge conflicts with main.
+1. **Merge PR #7** — Vercel build green; no conflicts after merge.
 2. **POST /api/runs** — end-to-end swarm trigger route: create `deal_runs` row → call `SwarmOrchestrator.run()` → persist `CostLedger` to `cost_ledger` table → update `deal_runs` status.
 3. **`persistCostLedger(runId, ledger)`** — helper that writes `CostLedger.entries[]` to `cost_ledger` table via admin client after each run.
 4. **Cost transparency UI** — `deal.html` reads `cost_ledger` rows from DB (not static JSON); shows real per-agent token/USD breakdown.
-5. **Free-trial enforcement UI** — block deal submission when `within_limits: false`; show upgrade CTA; link to upgrade screen.
-6. **Upgrade screen** — `/upgrade` page with plan comparison; calls Stripe Checkout once `STRIPE_SECRET_KEY` is set.
-7. **Stripe billing** — wire `lib/stripe.ts` once `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET` + `STRIPE_PRICE_ID` are provided; handle webhook to update `profiles.plan`.
+5. **Free-trial enforcement UI** — block deal submission when `within_limits: false`; show upgrade CTA; link to `/pricing`.
+6. **Stripe billing** — wire `lib/stripe.ts` once `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET` + `STRIPE_PRICE_ID` are provided; handle webhook to update `profiles.plan`; hook up `/pricing` Subscribe CTA to Stripe Checkout.
+7. **`/terms` page** — add proper Terms of Service page; update footer links on `/pricing`.
 8. **Google Drive connector** — implement `GoogleDriveConnector.listFolder()` + `downloadFile()` once `GOOGLE_OAUTH_CLIENT_ID/SECRET` are set; wire into jobs worker.
 9. **Dropbox connector** — implement `DropboxConnector.listSharedFolder()` + `downloadFile()` once `DROPBOX_APP_KEY/SECRET` are set.
 10. **Vercel Cron for jobs worker** — add cron entry to `vercel.json`: `{ "crons": [{"path": "/api/jobs/worker", "schedule": "*/1 * * * *"}] }`.
-10. **Vercel Cron for jobs worker** — add `vercel.json` with `{ "crons": [{"path": "/api/jobs/worker", "schedule": "*/1 * * * *"}] }`.
-11. **Merge PR #4 (rendering)** — re-target `pr5/rendering-and-cost-transparency` to `main` after PR #7 merges; delivers design tokens, TOC, cost panel, settings stub.
-12. **Close PRs #4 (path-b mocks) and #6 (auth)** — superseded by PR #7; close with reference.
-13. **OpenAI adapter** — future PR once `OPENAI_API_KEY` is provided.
-14. **Perplexity / web-search adapter** — future PR once `PERPLEXITY_API_KEY` is provided.
-15. **Email-forward ingestion** — long-term; requires inbound email parsing service.
+11. **Merge PR #4 (rendering)** — re-target `pr5/rendering-and-cost-transparency` to `main` after PR #7 merges.
+12. **OpenAI adapter** — future PR once `OPENAI_API_KEY` is provided.
+13. **Perplexity / web-search adapter** — future PR once `PERPLEXITY_API_KEY` is provided.
+14. **Email-forward ingestion** — long-term; requires inbound email parsing service.
 
 ---
 
@@ -166,6 +164,7 @@
 | Swarm run trigger | `SwarmOrchestrator.run()` not reachable from any API route | Build `POST /api/runs` |
 | Free-trial UI block | `GET /api/usage` returns correct `within_limits`; no UI enforces it | Build upgrade screen + enforcement UI |
 | Cost transparency UI | `deal.html` cost panel reads static JSON, not DB | Build DB read path after `persistCostLedger()` |
+| ToS / Legal page | `/pricing` footer links to GitHub LICENSE as ToS | Build `/terms` page with proper terms copy |
 
 ---
 
