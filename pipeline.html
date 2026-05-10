@@ -99,11 +99,32 @@ async function runAgent(a){const r=rec();setStatus(a.id,'running','run');log(a.i
  const out=mockOutput(a.id,r);log(a.id,`[done] emitted ${out.evidence.length} evidence items`);
  $('e-'+a.id).innerHTML=out.evidence.map(e=>`<div class="ev"><b>${e.label}</b>${e.value}</div>`).join('');
  saveEnrich(a.id,out);setStatus(a.id,'complete','ok')}
-function mockOutput(id,r){const c=r.company||'TargetCo';const s=r.sector||'fintech';
- if(id==='ingest')return{evidence:[{label:'schema',value:'valid'},{label:'duplicates',value:'none in vault'},{label:'completeness',value:'82%'}]};
- if(id==='research')return{evidence:[{label:'TAM',value:`$${(8+Math.random()*40).toFixed(1)}B (${s})`},{label:'comps',value:'3 public, 5 private'},{label:'news',value:`${c} raised seed Q1 26`},{label:'sources',value:'12 cited'}]};
- if(id==='team')return{evidence:[{label:'domain fit',value:'8.4 / 10'},{label:'prior exits',value:'1 (acqui-hire)'},{label:'github velocity',value:'47 commits/wk'}]};
- if(id==='unitecon')return{evidence:[{label:'ARR',value:r.arr||'$1.2M'},{label:'GM',value:'74%'},{label:'CAC payback',value:'14 mo'},{label:'burn multiple',value:'1.6x'},{label:'runway',value:'19 mo'}]};
+function mockOutput(id,r){
+ const filledKeys=['company','stage','sector','hq','website','thesis','ask','premoney','arr','mom','logos','nrr'];
+ const filled=filledKeys.filter(k=>r[k]!=null&&r[k]!=='').length;
+ const pct=Math.round(filled/filledKeys.length*100)+'%';
+ if(id==='ingest')return{evidence:[
+   {label:'schema',value:'valid'},
+   {label:'duplicates',value:'none in vault'},
+   {label:'completeness',value:pct}
+ ]};
+ if(id==='research')return{evidence:[
+   {label:'status',value:'Research agent not connected'},
+   {label:'TAM',value:'Requires web search tools'},
+   {label:'comps',value:'Requires Crunchbase / Pitchbook access'},
+   {label:'news',value:'Requires news search tools'}
+ ]};
+ if(id==='team')return{evidence:[
+   {label:'status',value:'Team agent not connected'},
+   {label:'domain fit',value:'Requires LinkedIn profile access'},
+   {label:'velocity',value:'Requires GitHub activity data'}
+ ]};
+ if(id==='unitecon')return{evidence:[
+   {label:'ARR',value:r.arr?'$'+Number(r.arr).toLocaleString():'Not provided'},
+   {label:'MoM growth',value:r.mom?r.mom+'%':'Not provided'},
+   {label:'NRR',value:r.nrr?r.nrr+'%':'Not provided'},
+   {label:'status',value:'GM, CAC, burn multiple require financial model upload'}
+ ]};
  return{evidence:[]}}
 async function runAll(){if(!rec().company){alert('Submit a deal first.');return}
  $('runAll').disabled=true;for(const a of AGENTS)await runAgent(a);$('toMemo').disabled=false;$('runAll').disabled=false}

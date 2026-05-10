@@ -477,14 +477,39 @@ async function runAgent(a){
 }
 
 function generateEvidence(id){
-  const c=R.company||'Company';
+  const filled=DEAL_FIELDS.filter(k=>R[k]).length;
   switch(id){
-    case 'ingest':return [{k:'Schema',v:'valid'},{k:'Dupes',v:'none'},{k:'Completeness',v:Math.round(DEAL_FIELDS.filter(k=>R[k]).length/DEAL_FIELDS.length*100)+'%'}];
-    case 'research':return [{k:'TAM',v:'$'+((Math.random()*50+5).toFixed(1))+'B'},{k:'CAGR',v:(Math.random()*30+10).toFixed(1)+'%'},{k:'Comps',v:Math.floor(Math.random()*5+2)+' public, '+Math.floor(Math.random()*8+3)+' private'},{k:'News',v:c+' recent coverage found'},{k:'Sources',v:Math.floor(Math.random()*15+8)+' cited'}];
-    case 'team':return [{k:'Domain Fit',v:(Math.random()*3+7).toFixed(1)+'/10'},{k:'Prior Exits',v:Math.floor(Math.random()*3)+' acqui-hire(s)'},{k:'Velocity',v:Math.floor(Math.random()*60+20)+' commits/wk'},{k:'Avg Experience',v:Math.floor(Math.random()*8+6)+' yrs'},{k:'Network',v:'Strong industry connections'}];
-    case 'unit':return [{k:'ARR',v:R.arr||'N/A'},{k:'Gross Margin',v:Math.floor(Math.random()*20+65)+'%'},{k:'CAC Payback',v:Math.floor(Math.random()*12+8)+' mo'},{k:'Burn Multiple',v:(Math.random()*1.5+0.8).toFixed(1)+'x'},{k:'Runway',v:Math.floor(Math.random()*12+12)+' mo'},{k:'LTV/CAC',v:(Math.random()*3+2).toFixed(1)+'x'}];
-    case 'competition':return [{k:'Direct Comps',v:Math.floor(Math.random()*4+2)+' identified'},{k:'Moat Type',v:['Regulatory','Data','Network','Integration'][Math.floor(Math.random()*4)]},{k:'Positioning',v:'Differentiated on '+(R.icp?R.icp.split(',')[0]:'target segment')},{k:'BigCo Risk',v:['Low','Medium','Medium-Low'][Math.floor(Math.random()*3)]}];
-    case 'risk':return [{k:'Kill Risk #1',v:'Market timing / adoption speed'},{k:'Kill Risk #2',v:'Competitive entry from incumbents'},{k:'Kill Risk #3',v:'Regulatory uncertainty'},{k:'Mitigants',v:'Early mover advantage, team depth'},{k:'Reg Exposure',v:['Tailwind','Neutral','Headwind'][Math.floor(Math.random()*3)]}];
+    case 'ingest':return [
+      {k:'Schema',v:'valid'},
+      {k:'Dupes',v:'none'},
+      {k:'Completeness',v:Math.round(filled/DEAL_FIELDS.length*100)+'%'}
+    ];
+    case 'research':return [
+      {k:'Status',v:'Research agent not connected'},
+      {k:'TAM',v:'Requires web search tools'},
+      {k:'Comps',v:'Requires Crunchbase / Pitchbook access'},
+      {k:'News',v:'Requires news search tools'}
+    ];
+    case 'team':return [
+      {k:'Status',v:'Team agent not connected'},
+      {k:'Domain Fit',v:'Requires LinkedIn profile access'},
+      {k:'Velocity',v:'Requires GitHub activity data'}
+    ];
+    case 'unit':return [
+      {k:'ARR',v:R.arr?'$'+Number(R.arr).toLocaleString():'Not provided'},
+      {k:'MoM Growth',v:R.mom?R.mom+'%':'Not provided'},
+      {k:'NRR',v:R.nrr?R.nrr+'%':'Not provided'},
+      {k:'Status',v:'GM, CAC, burn multiple require financial model upload'}
+    ];
+    case 'competition':return [
+      {k:'Status',v:'Competition agent not connected'},
+      {k:'Comps',v:'Requires market research tools'},
+      {k:'Moat',v:'Requires competitive analysis'}
+    ];
+    case 'risk':return [
+      {k:'Status',v:'Risk agent not connected'},
+      {k:'Framework',v:'Risk analysis requires research agent output'}
+    ];
     default:return [];
   }
 }

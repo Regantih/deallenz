@@ -83,7 +83,61 @@ function renderMsgs(){const c=$('msgs');c.innerHTML='';for(const m of state.msgs
 function renderFields(){const c=$('fields');c.innerHTML='';for(const [k,label] of FIELDS){const v=state.record[k];const row=document.createElement('div');row.className='field';const val=v==null||v===''||(Array.isArray(v)&&!v.length)?'<span class="empty">—</span>':'<span>'+(Array.isArray(v)?v.join(', '):String(v))+'</span>';row.innerHTML='<b>'+label+'</b>'+val;c.appendChild(row);}}
 function parseReply(text){const idx=text.indexOf('---JSON---');if(idx<0)return{reply:text,patch:{}};const reply=text.slice(0,idx).trim();const json=text.slice(idx+10).trim().replace(/^```json|^```|```$/g,'').trim();let patch={};try{patch=JSON.parse(json);}catch(e){}return{reply,patch};}
 async function callLLM(history){const provider=$('provider').value;const model=$('model').value.trim();const key=$('key').value.trim();if(provider==='local'||!key){return localExtract(history);}const messages=history.map(m=>({role:m.role==='user'?'user':'assistant',content:m.content}));try{if(provider==='anthropic'){const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model,max_tokens:1024,system:SYS,messages})});const d=await r.json();return d.content?.[0]?.text||JSON.stringify(d);}else{const r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'content-type':'application/json','authorization':'Bearer '+key},body:JSON.stringify({model,messages:[{role:'system',content:SYS},...messages]})});const d=await r.json();return d.choices?.[0]?.message?.content||JSON.stringify(d);}}catch(e){return'(agent error: '+e.message+')\n---JSON---\n{}';}}
-function localExtract(history){const last=history.filter(m=>m.role==='user').map(m=>m.content).join(' ');const patch={};const m1=last.match(/\b(pre-seed|seed|series-[ab]|growth)\b/i);if(m1)patch.stage=m1[1].toLowerCase();const m2=last.match(/\$\s?(\d+(?:\.\d+)?)\s?(k|m|million|thousand)?\s?(arr)?/i);if(m2&&/arr|revenue/i.test(last)){let n=parseFloat(m2[1]);if(/m|million/i.test(m2[2]||''))n*=1e6;else if(/k|thousand/i.test(m2[2]||''))n*=1e3;patch.arr=n;}const m3=last.match(/(\d+)\s*logos?/i);if(m3)patch.logos=+m3[1];const ask=['What\u2019s the company name?','What stage and sector?','One-line thesis — why this, why now?','Who\u2019s the ICP and what JTBD do they hire this for?','Latest ARR + MoM growth?','Who are the founders (LinkedIn URLs help)?','Round size and pre-money?','Deck or data-room link?'];const i=Math.min(Math.floor(history.filter(m=>m.role==='user').length-1),ask.length-1);return ask[Math.max(0,i)]+'\n---JSON---\n'+JSON.stringify(patch);}
+function localExtract(history){
+  const all=history.filter(m=>m.role==='user').map(m=>m.content).join(' ');
+  const patch={};
+  // Company name — look for explicit "called X", "company is X", or capitalized proper noun before "is"
+  const mName=all.match(/(?:company(?:\s+(?:is|called|named))?|it'?s?\s+called|called|named)\s+([A-Z][A-Za-z0-9\s&.-]{1,40}?)(?:\s*[,.]|\s+(?:is\s|are\s|a\s|an\s|the\s))/);
+  if(mName)patch.name=mName[1].trim();
+  // Stage
+  const mStage=all.match(/\b(pre-?seed|seed|series[- ][abAB]|growth)\b/i);
+  if(mStage)patch.stage=mStage[1].toLowerCase().replace(/\s/,'-');
+  // Sector
+  const SECTORS=['fintech','vertical saas','saas','healthtech','health tech','biotech','edtech','proptech','legaltech','climate tech','cleantech','cybersecurity','data infrastructure','enterprise software','consumer','marketplace','logistics','insurtech'];
+  for(const s of SECTORS){if(new RegExp('\\b'+s.replace(/ /g,'[\\s-]')+'\\b','i').test(all)){patch.sector=s;break;}}
+  // HQ / Location
+  const mHQ=all.match(/(?:based\s+in|headquartered\s+in|hq(?:ed)?\s+in|located\s+in|out\s+of|offices?\s+in)\s+([A-Z][A-Za-z\s,]{2,40}?)(?:\s*[,.]|$)/i);
+  if(mHQ)patch.hq=mHQ[1].trim().replace(/\s+/,' ');
+  // Thesis / value prop
+  const mThesis=all.match(/(?:thesis|opportunity|the\s+bet\s+is|the\s+idea\s+is|they\s+(?:help|solve|enable|provide)|value\s+prop)[:\s]+(.{20,200}?)(?:\.\s|$)/i);
+  if(mThesis)patch.thesis=mThesis[1].trim();
+  // Ask / raise amount
+  const mAsk=all.match(/(?:rais(?:ing|ed?)|ask(?:ing)?|round(?:\s+(?:size|is))?)\s+\$?\s*(\d+(?:\.\d+)?)\s*(k|m|million|thousand)?(?!\s*arr)/i);
+  if(mAsk){let n=parseFloat(mAsk[1]);if(/m|million/i.test(mAsk[2]||''))n*=1e6;else if(/k|thousand/i.test(mAsk[2]||''))n*=1e3;patch.ask=n;}
+  // Pre-money valuation (handles both "pre-money $15M" and "$15M pre-money")
+  const mPre=all.match(/(?:(?:pre[- ]?money|pre[- ]?val(?:uation)?|valued\s+at)\s+\$?\s*(\d+(?:\.\d+)?)\s*(k|m|million|thousand)?|\$?\s*(\d+(?:\.\d+)?)\s*(k|m|million|thousand)?\s+pre[- ]?(?:money|val))/i);
+  if(mPre){const raw=mPre[1]||mPre[3];const unit=mPre[2]||mPre[4]||'';let n=parseFloat(raw);if(/m|million/i.test(unit))n*=1e6;else if(/k|thousand/i.test(unit))n*=1e3;patch.premoney=n;}
+  // ARR
+  const mARR=all.match(/\$?\s*(\d+(?:\.\d+)?)\s*(k|m|million|thousand)?\s*(?:arr|in\s+arr|annual\s+(?:recurring\s+)?revenue)/i);
+  if(mARR){let n=parseFloat(mARR[1]);if(/m|million/i.test(mARR[2]||''))n*=1e6;else if(/k|thousand/i.test(mARR[2]||''))n*=1e3;patch.arr=n;}
+  // MoM growth
+  const mMoM=all.match(/(\d+(?:\.\d+)?)\s*%\s*(?:mom|month[- ]?over[- ]?month|monthly\s+growth|m\/m)/i);
+  if(mMoM)patch.mom=parseFloat(mMoM[1]);
+  // Logos / paying customers
+  const mLogos=all.match(/(\d+)\s*(?:logos?|paying\s+customers?|enterprise\s+customers?|clients?)/i);
+  if(mLogos)patch.logos=+mLogos[1];
+  // NRR (handles "118% NRR" and "NRR is 118%")
+  const mNRR=all.match(/(?:nrr\s+(?:is\s+|of\s+)?(\d+(?:\.\d+)?)\s*%|(\d+(?:\.\d+)?)\s*%\s*nrr)/i);
+  if(mNRR)patch.nrr=parseFloat(mNRR[1]||mNRR[2]);
+  // Use of funds
+  const mUse=all.match(/(?:use\s+of\s+funds?|spending\s+(?:it\s+)?on|going\s+towards?|capital\s+(?:for|towards?))[:\s]+(.{10,200}?)(?:\.\s|$)/i);
+  if(mUse)patch.use_of_funds=mUse[1].trim();
+  // Website
+  const mURL=all.match(/(?:website|site|url|domain)\s*[:\s]+\s*((?:https?:\/\/)?(?:www\.)?[a-z0-9][a-z0-9-]{1,60}\.[a-z]{2,}(?:\/[^\s]*)?)/i);
+  if(mURL)patch.url='https://'+mURL[1].replace(/^https?:\/\//,'');
+  const questions=[
+    'What\u2019s the company name and what do they do?',
+    'What stage and sector are they in?',
+    'One-line thesis \u2014 why this, why now?',
+    'Who\u2019s the ICP and what job do they hire this for?',
+    'Latest ARR and MoM growth rate?',
+    'Who are the founders (LinkedIn URLs help)?',
+    'Round size and pre-money valuation?',
+    'Deck or data-room link?'
+  ];
+  const i=Math.min(Math.floor(history.filter(m=>m.role==='user').length-1),questions.length-1);
+  return questions[Math.max(0,i)]+'\n---JSON---\n'+JSON.stringify(patch);
+}
 async function send(){const inp=$('inp');const txt=inp.value.trim();if(!txt)return;state.msgs.push({role:'user',content:txt});inp.value='';renderMsgs();$('send').disabled=true;const thinking={role:'bot',content:'…'};state.msgs.push(thinking);renderMsgs();const out=await callLLM(state.msgs.filter(m=>m.role!=='sys'&&m!==thinking));const{reply,patch}=parseReply(out);state.msgs.pop();state.msgs.push({role:'bot',content:reply||'(no reply)'});Object.assign(state.record,Object.fromEntries(Object.entries(patch).filter(([,v])=>v!=null&&v!=='')));renderMsgs();renderFields();$('send').disabled=false;inp.focus();}
 function finalize(){const r={...state.record};r.id=(r.name||'deal').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');r.submitted_at=new Date().toISOString();r.status='intake';r.transcript=state.msgs.filter(m=>m.role!=='sys');state.msgs.push({role:'sys',content:'Deal record finalized — '+r.id});renderMsgs();const blob=new Blob([JSON.stringify(r,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='deals/'+r.id+'.json';a.click();}
 $('send').addEventListener('click',send);
