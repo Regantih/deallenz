@@ -1,0 +1,50 @@
+# Supabase CLI configuration for DealLens
+# Reference: https://supabase.com/docs/reference/cli/config
+#
+# Run `npx supabase start` to start a local Supabase stack.
+# Run `npx supabase db push` to apply migrations to the linked remote project.
+# Run `npx supabase link --project-ref <ref>` to link to the Regantih project.
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323
+
+[inbucket]
+enabled = true
+port = 54324
+
+[storage]
+enabled = true
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+# Add your Vercel domain here at deploy time:
+# additional_redirect_urls = ["https://your-app.vercel.app"]
+jwt_expiry = 3600
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+# Set to true in production to require email confirmation:
+enable_confirmations = false
+
+# GitHub OAuth — enable in the Supabase Dashboard under Auth > Providers.
+# Set the env vars below in your Supabase project settings, not in this file.
+[auth.external.github]
+enabled = false
+client_id = "env(GITHUB_CLIENT_ID)"
+secret = "env(GITHUB_CLIENT_SECRET)"

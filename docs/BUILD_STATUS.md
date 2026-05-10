@@ -1,6 +1,7 @@
 # DealLens — Build Status
 
 > **Last updated:** 2026-05-10  
+> **Commit:** `pr7/real-wire` tip (build green — both package pins applied; previously `59d0b27` at time of first draft)  
 > **Commit:** `59d0b27` (pr7/real-wire tip at time of writing)  
 > **Maintainer rule:** Every meaningful change must update this file. See [docs/DOCS_DISCIPLINE.md](./DOCS_DISCIPLINE.md).
 
@@ -114,6 +115,10 @@
 
 ## In progress
 
+| Item | Branch | PR | Status |
+|---|---|---|---|
+| Real Supabase + real Anthropic (PR7) | `pr7/real-wire` | [#7](https://github.com/Regantih/deallenz/pull/7) | 🟢 **Vercel build green** — `next@15.3.9` + `vercel.json` framework pin applied; awaiting merge |
+| Build status docs (this PR) | `docs/build-status` | [#8](https://github.com/Regantih/deallenz/pull/8) | ✅ Merged into main |
 | Item | Branch | PR | Blocker |
 |---|---|---|---|
 | Real Supabase + real Anthropic (PR7) | `pr7/real-wire` | [#7](https://github.com/Regantih/deallenz/pull/7) | **Vercel build failing** — `@anthropic-ai/sdk@^0.39.0` version may not exist on npm; pull logs via `npx vercel inspect dpl_8zumMjZTVHqqRTqDJGLKY5DL4eFF --logs` |
@@ -123,6 +128,7 @@
 
 ## Pending / not started (prioritised)
 
+1. **Merge PR #7** — Vercel build now green; no conflicts after this merge commit.
 1. **Fix PR #7 Vercel build** — pin `@anthropic-ai/sdk` to correct available version; re-push fixup commit.
 2. **POST /api/runs** — end-to-end swarm trigger route: create `deal_runs` row → call `SwarmOrchestrator.run()` → persist `CostLedger` to `cost_ledger` table → update `deal_runs` status.
 3. **`persistCostLedger(runId, ledger)`** — helper that writes `CostLedger.entries[]` to `cost_ledger` table via admin client after each run.
@@ -132,6 +138,7 @@
 7. **Stripe billing** — wire `lib/stripe.ts` once `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET` + `STRIPE_PRICE_ID` are provided; handle webhook to update `profiles.plan`.
 8. **Google Drive connector** — implement `GoogleDriveConnector.listFolder()` + `downloadFile()` once `GOOGLE_OAUTH_CLIENT_ID/SECRET` are set; wire into jobs worker.
 9. **Dropbox connector** — implement `DropboxConnector.listSharedFolder()` + `downloadFile()` once `DROPBOX_APP_KEY/SECRET` are set.
+10. **Vercel Cron for jobs worker** — add cron entry to `vercel.json`: `{ "crons": [{"path": "/api/jobs/worker", "schedule": "*/1 * * * *"}] }`.
 10. **Vercel Cron for jobs worker** — add `vercel.json` with `{ "crons": [{"path": "/api/jobs/worker", "schedule": "*/1 * * * *"}] }`.
 11. **Merge PR #4 (rendering)** — re-target `pr5/rendering-and-cost-transparency` to `main` after PR #7 merges; delivers design tokens, TOC, cost panel, settings stub.
 12. **Close PRs #4 (path-b mocks) and #6 (auth)** — superseded by PR #7; close with reference.
@@ -159,6 +166,16 @@
 | Swarm run trigger | `SwarmOrchestrator.run()` not reachable from any API route | Build `POST /api/runs` |
 | Free-trial UI block | `GET /api/usage` returns correct `within_limits`; no UI enforces it | Build upgrade screen + enforcement UI |
 | Cost transparency UI | `deal.html` cost panel reads static JSON, not DB | Build DB read path after `persistCostLedger()` |
+
+---
+
+## Package versions (exact pins)
+
+| Package | Pinned version | Notes |
+|---|---|---|
+| `@anthropic-ai/sdk` | `0.95.1` | `^0.39.0` had no matching releases on npm |
+| `@supabase/supabase-js` | `2.49.4` | `^2.49.4` resolves to `2.105.4` which ships `@supabase/postgrest-js@2.105.4`; that version's stricter `GenericTable` type (requires `Relationships: GenericRelationship[]`) breaks `.from().select()` type inference in strict mode without regenerated types |
+| `next` | `15.3.9` | bumped from `15.3.2` to clear Vercel CVE-2025-66478 block |
 
 ---
 
