@@ -225,7 +225,9 @@ body{margin:0;background:var(--color-paper);color:var(--color-ink);
   text-align:center;padding:var(--space-8) var(--space-6)}
 .state-wrap .kicker{margin-bottom:var(--space-3)}
 .state-wrap h1{font-size:var(--text-3xl);margin:0 0 var(--space-4)}
-.state-wrap p{color:var(--color-mute);font-family:var(--font-sans);font-size:var(--text-base);margin:0 0 var(--space-2)}
+.state-wrap p{
+  color:var(--color-mute);font-family:var(--font-sans);
+  font-size:var(--text-base);margin:0 0 var(--space-2)}
 .state-wrap a{color:var(--color-accent);text-decoration:none}
 .state-wrap a:hover{text-decoration:underline}
 
@@ -247,7 +249,7 @@ body{margin:0;background:var(--color-paper);color:var(--color-ink);
   .toc{
     position:static;max-height:none;overflow:visible;
     display:flex;flex-wrap:nowrap;overflow-x:auto;
-    gap:0;padding:var(--space-4) 0;
+    padding:var(--space-4) 0;
     border-bottom:1px solid var(--color-rule);
     margin-bottom:var(--space-5);
     scrollbar-width:none}
@@ -262,8 +264,8 @@ body{margin:0;background:var(--color-paper);color:var(--color-ink);
     border-left:none;border-bottom:2px solid var(--color-accent);
     background:rgba(139,111,61,.07)}
   .exhibits-panel{
-    border-top:none;margin-top:0;
-    padding:var(--space-4) 0 0}}
+    border-top:1px solid var(--color-rule);
+    margin-top:var(--space-5);padding-top:var(--space-4)}}
 @media(max-width:600px){
   .app-header{padding:0 var(--space-4)}
   .page-wrap{padding:0 var(--space-4)}
@@ -292,9 +294,10 @@ body{margin:0;background:var(--color-paper);color:var(--color-ink);
   .data-row{border-bottom:.5pt dashed #ccc}
   .chip{border:.5pt solid #ccc}
   .empty-state{
-    border:.5pt dashed #ccc;
-    background:#f9f9f9}
-  .exhibits-panel{display:block!important;border-top:.5pt solid #ccc}
+    border:.5pt dashed #ccc;background:#f9f9f9}
+  .exhibits-panel{
+    display:block!important;
+    border-top:.5pt solid #ccc}
   .app-footer{
     display:block;text-align:center;
     border-top:.5pt solid #ccc;font-size:8pt;padding-top:8pt}
@@ -305,7 +308,7 @@ body{margin:0;background:var(--color-paper);color:var(--color-ink);
 <body>
 <a class="skip-link" href="#memo-content">Skip to memo content</a>
 
-<!-- ======= App header ================================================= -->
+<!-- App header -->
 <header class="app-header" role="banner">
   <a class="brand" href="./index.html" aria-label="DealLens — go to home">
     <span class="brand-logo" role="img" aria-hidden="true"></span>
@@ -318,14 +321,14 @@ body{margin:0;background:var(--color-paper);color:var(--color-ink);
   </nav>
 </header>
 
-<!-- ======= Main content =============================================== -->
+<!-- Main content -->
 <div class="page-wrap" id="main-content">
   <div id="app" role="main" aria-live="polite" aria-label="Deal memo">
     <div class="state-wrap"><p>Loading deal…</p></div>
   </div>
 </div>
 
-<!-- ======= App footer ================================================= -->
+<!-- App footer -->
 <footer class="app-footer" role="contentinfo">
   <span>© 2026 Marketlogic Investors LLC · Internal use only.</span>
   <span id="build-meta" aria-label="App version"></span>
@@ -335,30 +338,30 @@ body{margin:0;background:var(--color-paper);color:var(--color-ink);
 'use strict';
 
 // -----------------------------------------------------------------------
-// Constants
+// Chapter definitions: [id, num, act, title, agent]
 // -----------------------------------------------------------------------
 const CH = [
-  ['customer','01','WHY','The Customer','ingest'],
-  ['problem','02','WHY','The Problem','research'],
-  ['solution','03','WHY','The Solution','ingest'],
-  ['company','04','WHAT','The Company','ingest'],
-  ['market','05','WHAT','The Market (TAM / SAM / SOM)','research'],
-  ['comp','06','WHAT','Competition','research'],
-  ['team','07','WHO','The Team','team'],
-  ['traction','08','HOW','Traction','ingest'],
-  ['moat','09','HOW','Moat','research'],
-  ['macro','10','HOW','Macro','research'],
-  ['micro','11','SO-WHAT','Unit Economics','unit-econ'],
-  ['geo','12','SO-WHAT','Geopolitics','research'],
-  ['risks','13','SO-WHAT','Risks','research'],
-  ['verdict','14','SO-WHAT','Verdict','team']
+  ['customer','01','WHY',      'The Customer',              'ingest'],
+  ['problem', '02','WHY',      'The Problem',               'research'],
+  ['solution','03','WHY',      'The Solution',              'ingest'],
+  ['company', '04','WHAT',     'The Company',               'ingest'],
+  ['market',  '05','WHAT',     'The Market (TAM / SAM / SOM)', 'research'],
+  ['comp',    '06','WHAT',     'Competition',               'research'],
+  ['team',    '07','WHO',      'The Team',                  'team'],
+  ['traction','08','HOW',      'Traction',                  'ingest'],
+  ['moat',    '09','HOW',      'Moat',                      'research'],
+  ['macro',   '10','HOW',      'Macro',                     'research'],
+  ['micro',   '11','SO-WHAT',  'Unit Economics',            'unit-econ'],
+  ['geo',     '12','SO-WHAT',  'Geopolitics',               'research'],
+  ['risks',   '13','SO-WHAT',  'Risks',                     'research'],
+  ['verdict', '14','SO-WHAT',  'Verdict',                   'team']
 ];
 
 const ACT_LABELS = {
-  WHY:     'Act I · Why',
-  WHAT:    'Act II · What',
-  WHO:     'Act III · Who',
-  HOW:     'Act IV · How',
+  'WHY':     'Act I · Why',
+  'WHAT':    'Act II · What',
+  'WHO':     'Act III · Who',
+  'HOW':     'Act IV · How',
   'SO-WHAT': 'Act V · So-What'
 };
 
@@ -368,31 +371,38 @@ const ACT_LABELS = {
 const money = v => v ? '$' + Number(v).toLocaleString() : '—';
 const pct   = v => v ? Number(v) + '%' : '—';
 const dur   = ms => ms >= 1000 ? (ms / 1000).toFixed(1) + 's' : ms + 'ms';
-const esc   = s => s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : '';
+const esc   = s => s
+  ? String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+  : '';
 
 // -----------------------------------------------------------------------
-// Cost panel
+// Cost & Run panel
+// Reads from deal.cost.* first, falls back to top-level deal.* fields.
+// Fields: tokens_in, tokens_out, model, usd_cost, duration_ms, run_id
 // -----------------------------------------------------------------------
 function buildCostPanel(d) {
-  const c = d.cost || {};
-  const tokIn  = c.tokens_in  ?? d.tokens_in;
-  const tokOut = c.tokens_out ?? d.tokens_out;
-  const model  = c.model      ?? d.model_used;
-  const usd    = c.usd_cost   ?? d.usd_cost;
+  const c      = d.cost || {};
+  const tokIn  = c.tokens_in   ?? d.tokens_in;
+  const tokOut = c.tokens_out  ?? d.tokens_out;
+  const model  = c.model       ?? d.model_used;
+  const usd    = c.usd_cost    ?? d.usd_cost;
   const ms     = c.duration_ms ?? d.duration_ms;
-  const runId  = c.run_id     ?? d.run_id;
-  const hasAny = tokIn != null || usdCost != null || model;
-  // usdCost never set above — use usd
+  const runId  = c.run_id      ?? d.run_id;
+
   const hasData = tokIn != null || usd != null || model;
 
-  const items = [
+  const cells = [
     model  ? `<div class="cost-item"><span class="cost-label">Model</span><span class="cost-value">${esc(model)}</span></div>` : '',
-    runId  ? `<div class="cost-item"><span class="cost-label">Run ID</span><span class="cost-value" title="${esc(runId)}">${esc(String(runId).slice(0,14))}…</span></div>` : '',
+    runId  ? `<div class="cost-item"><span class="cost-label">Run ID</span><span class="cost-value" title="${esc(String(runId))}">${esc(String(runId).slice(0, 14))}…</span></div>` : '',
     tokIn  != null ? `<div class="cost-item"><span class="cost-label">Tokens in</span><span class="cost-value">${Number(tokIn).toLocaleString()}</span></div>` : '',
     tokOut != null ? `<div class="cost-item"><span class="cost-label">Tokens out</span><span class="cost-value">${Number(tokOut).toLocaleString()}</span></div>` : '',
     ms     != null ? `<div class="cost-item"><span class="cost-label">Duration</span><span class="cost-value">${dur(ms)}</span></div>` : '',
     usd    != null ? `<div class="cost-item"><span class="cost-label">LLM cost</span><span class="cost-value">$${Number(usd).toFixed(4)}</span></div>` : '',
-  ].filter(Boolean).join('');
+  ].filter(Boolean);
 
   return `
     <div class="cost-panel" role="region" aria-label="Cost and run metadata">
@@ -400,19 +410,20 @@ function buildCostPanel(d) {
         <p class="cost-panel-title">Cost &amp; Run</p>
       </div>
       ${hasData
-        ? `<div class="cost-grid">${items}</div>`
-        : `<p class="cost-empty">Cost data not yet available.</p>`}
+        ? `<div class="cost-grid">${cells.join('')}</div>`
+        : '<p class="cost-empty">Cost data not yet available.</p>'}
     </div>`;
 }
 
 // -----------------------------------------------------------------------
 // Exhibits panel
+// Reads deck, dataroom, model (file), and exhibits[] from deal JSON.
 // -----------------------------------------------------------------------
 function buildExhibits(d) {
   const items = [];
-  if (d.deck     && d.deck.trim())     items.push({ name: 'Pitch deck',  url: d.deck.trim(),     type: 'deck' });
-  if (d.dataroom && d.dataroom.trim()) items.push({ name: 'Data room',   url: d.dataroom.trim(), type: 'data room' });
-  if (d.model    && d.model.trim())    items.push({ name: 'Financial model', url: d.model.trim(), type: 'model' });
+  if (d.deck     && String(d.deck).trim())     items.push({ name: 'Pitch deck',        url: d.deck.trim(),     type: 'deck' });
+  if (d.dataroom && String(d.dataroom).trim()) items.push({ name: 'Data room',          url: d.dataroom.trim(), type: 'data room' });
+  if (d.model    && String(d.model).trim())    items.push({ name: 'Financial model',    url: d.model.trim(),    type: 'model' });
   if (Array.isArray(d.exhibits)) {
     for (const ex of d.exhibits) {
       if (ex && ex.url) items.push(ex);
@@ -424,13 +435,15 @@ function buildExhibits(d) {
         <div class="exhibit-item">
           <span class="exhibit-icon" aria-hidden="true">📎</span>
           <div>
-            <a href="${esc(ex.url)}" class="exhibit-link"
-               target="_blank" rel="noopener noreferrer"
-               aria-label="Open ${esc(ex.name)} in new tab">${esc(ex.name)}</a>
+            <a class="exhibit-link"
+               href="${esc(ex.url)}"
+               target="_blank"
+               rel="noopener noreferrer"
+               aria-label="Open ${esc(ex.name)} (opens in new tab)">${esc(ex.name)}</a>
             ${ex.type ? `<span class="exhibit-type">${esc(ex.type)}${ex.size ? ' · ' + esc(ex.size) : ''}</span>` : ''}
           </div>
         </div>`).join('')
-    : `<p class="exhibits-empty">No exhibits attached yet.</p>`;
+    : '<p class="exhibits-empty">No exhibits attached yet.</p>';
 
   return `
     <div class="exhibits-panel" role="complementary" aria-label="Exhibits and attachments">
@@ -442,7 +455,7 @@ function buildExhibits(d) {
 }
 
 // -----------------------------------------------------------------------
-// TOC
+// Table of contents
 // -----------------------------------------------------------------------
 function buildTOC() {
   const ACT_ORDER = ['WHY','WHAT','WHO','HOW','SO-WHAT'];
@@ -451,7 +464,6 @@ function buildTOC() {
     if (!grouped[act]) grouped[act] = [];
     grouped[act].push({ id: k, n, title });
   }
-
   let html = '<p class="toc-heading">Contents</p>';
   for (const act of ACT_ORDER) {
     if (!grouped[act]) continue;
@@ -464,79 +476,85 @@ function buildTOC() {
 }
 
 // -----------------------------------------------------------------------
-// Section content
+// Section content builder
 // -----------------------------------------------------------------------
 function buildSection(k, n, act, title, agent, d) {
   let body = '';
 
-  if (k === 'customer') {
-    if (d.icp || d.jtbd || d.wtp) {
-      body = `<div class="data-grid" role="table" aria-label="Customer details">`;
-      if (d.icp)  body += `<div class="data-row"><span class="data-key">ICP</span><span class="data-val">${esc(d.icp)}</span></div>`;
-      if (d.jtbd) body += `<div class="data-row"><span class="data-key">JTBD</span><span class="data-val">${esc(d.jtbd)}</span></div>`;
-      if (d.wtp)  body += `<div class="data-row"><span class="data-key">WTP</span><span class="data-val">${esc(String(d.wtp))}</span></div>`;
-      body += `</div>`;
-    } else {
-      body = `<div class="empty-state">No customer profile yet. Describe the ICP and JTBD during intake, or upload a deck with customer discovery data.</div>`;
-    }
-
-  } else if (k === 'traction') {
-    if (d.arr || d.mom || d.logos || d.nrr) {
-      body = `<div class="data-grid" role="table" aria-label="Traction metrics">`;
-      if (d.arr)   body += `<div class="data-row"><span class="data-key">ARR</span><span class="data-val">${money(d.arr)}</span></div>`;
-      if (d.mom)   body += `<div class="data-row"><span class="data-key">MoM growth</span><span class="data-val">${pct(d.mom)}</span></div>`;
-      if (d.logos) body += `<div class="data-row"><span class="data-key">Logos</span><span class="data-val">${esc(String(d.logos))}</span></div>`;
-      if (d.nrr)   body += `<div class="data-row"><span class="data-key">NRR</span><span class="data-val">${pct(d.nrr)}</span></div>`;
-      body += `</div>`;
-    } else {
-      body = `<div class="empty-state">No traction data yet. Add ARR, MoM growth, logos, and NRR during intake or upload financials.</div>`;
-    }
-
-  } else if (k === 'team') {
-    if (Array.isArray(d.founders) && d.founders.length) {
-      body = `<div class="data-grid" role="table" aria-label="Founding team">`;
-      for (const f of d.founders) {
-        const isURL = typeof f === 'string' && f.startsWith('http');
-        const display = isURL ? f.replace(/^https?:\/\/(www\.)?/,'').replace(/\/$/,'') : f;
-        body += `<div class="data-row"><span class="data-key">Founder</span><span class="data-val">${
-          isURL
-            ? `<a href="${esc(f)}" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn profile: ${esc(display)}">${esc(display)}</a>`
-            : esc(f)
-        }</span></div>`;
+  switch (k) {
+    case 'customer':
+      if (d.icp || d.jtbd || d.wtp) {
+        body = '<div class="data-grid" role="table" aria-label="Customer details">';
+        if (d.icp)  body += `<div class="data-row"><span class="data-key">ICP</span><span class="data-val">${esc(d.icp)}</span></div>`;
+        if (d.jtbd) body += `<div class="data-row"><span class="data-key">JTBD</span><span class="data-val">${esc(d.jtbd)}</span></div>`;
+        if (d.wtp)  body += `<div class="data-row"><span class="data-key">WTP</span><span class="data-val">${esc(String(d.wtp))}</span></div>`;
+        body += '</div>';
+      } else {
+        body = '<div class="empty-state">No customer profile yet. Describe the ICP and JTBD during intake, or upload a deck with customer discovery data.</div>';
       }
-      body += `</div>`;
-    } else {
-      body = `<div class="empty-state">No team data yet. Add founder names or LinkedIn profiles during intake.</div>`;
-    }
+      break;
 
-  } else if (k === 'company') {
-    const hasCompanyData = d.name || d.stage || d.sector || d.hq || d.url;
-    if (hasCompanyData) {
-      body = `<div class="data-grid" role="table" aria-label="Company details">`;
-      if (d.name)  body += `<div class="data-row"><span class="data-key">Company</span><span class="data-val">${esc(d.name)}</span></div>`;
-      if (d.stage) body += `<div class="data-row"><span class="data-key">Stage</span><span class="data-val">${esc(d.stage)}</span></div>`;
-      if (d.sector) body += `<div class="data-row"><span class="data-key">Sector</span><span class="data-val">${esc(d.sector)}</span></div>`;
-      if (d.hq)    body += `<div class="data-row"><span class="data-key">HQ</span><span class="data-val">${esc(d.hq)}</span></div>`;
-      if (d.url)   body += `<div class="data-row"><span class="data-key">Website</span><span class="data-val"><a href="${esc(d.url)}" target="_blank" rel="noopener noreferrer">${esc(d.url.replace(/^https?:\/\//,''))}</a></span></div>`;
-      if (d.ask || d.premoney) {
+    case 'traction':
+      if (d.arr || d.mom || d.logos || d.nrr) {
+        body = '<div class="data-grid" role="table" aria-label="Traction metrics">';
+        if (d.arr)   body += `<div class="data-row"><span class="data-key">ARR</span><span class="data-val">${money(d.arr)}</span></div>`;
+        if (d.mom)   body += `<div class="data-row"><span class="data-key">MoM growth</span><span class="data-val">${pct(d.mom)}</span></div>`;
+        if (d.logos) body += `<div class="data-row"><span class="data-key">Logos</span><span class="data-val">${esc(String(d.logos))}</span></div>`;
+        if (d.nrr)   body += `<div class="data-row"><span class="data-key">NRR</span><span class="data-val">${pct(d.nrr)}</span></div>`;
+        body += '</div>';
+      } else {
+        body = '<div class="empty-state">No traction data yet. Add ARR, MoM growth, logos, and NRR during intake or upload financials.</div>';
+      }
+      break;
+
+    case 'team':
+      if (Array.isArray(d.founders) && d.founders.length) {
+        body = '<div class="data-grid" role="table" aria-label="Founding team">';
+        for (const f of d.founders) {
+          const isURL = typeof f === 'string' && f.startsWith('http');
+          const display = isURL
+            ? f.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')
+            : f;
+          body += `<div class="data-row"><span class="data-key">Founder</span><span class="data-val">${
+            isURL
+              ? `<a href="${esc(f)}" target="_blank" rel="noopener noreferrer" aria-label="Founder LinkedIn: ${esc(display)}">${esc(display)}</a>`
+              : esc(f)
+          }</span></div>`;
+        }
+        body += '</div>';
+      } else {
+        body = '<div class="empty-state">No team data yet. Add founder names or LinkedIn profiles during intake.</div>';
+      }
+      break;
+
+    case 'company': {
+      const hasData = d.name || d.stage || d.sector || d.hq || d.url || d.ask || d.premoney;
+      if (hasData) {
+        body = '<div class="data-grid" role="table" aria-label="Company details">';
+        if (d.name)     body += `<div class="data-row"><span class="data-key">Company</span><span class="data-val">${esc(d.name)}</span></div>`;
+        if (d.stage)    body += `<div class="data-row"><span class="data-key">Stage</span><span class="data-val">${esc(d.stage)}</span></div>`;
+        if (d.sector)   body += `<div class="data-row"><span class="data-key">Sector</span><span class="data-val">${esc(d.sector)}</span></div>`;
+        if (d.hq)       body += `<div class="data-row"><span class="data-key">HQ</span><span class="data-val">${esc(d.hq)}</span></div>`;
+        if (d.url)      body += `<div class="data-row"><span class="data-key">Website</span><span class="data-val"><a href="${esc(d.url)}" target="_blank" rel="noopener noreferrer">${esc(d.url.replace(/^https?:\/\//,''))}</a></span></div>`;
         if (d.ask)      body += `<div class="data-row"><span class="data-key">Ask</span><span class="data-val">${money(d.ask)}</span></div>`;
         if (d.premoney) body += `<div class="data-row"><span class="data-key">Pre-money</span><span class="data-val">${money(d.premoney)}</span></div>`;
         if (d.lead)     body += `<div class="data-row"><span class="data-key">Lead</span><span class="data-val">${esc(d.lead)}</span></div>`;
+        body += '</div>';
+      } else {
+        body = '<div class="empty-state">No company profile yet. Submit a deal to populate this section.</div>';
       }
-      body += `</div>`;
-    } else {
-      body = `<div class="empty-state">No company profile yet. Submit a deal to populate this section.</div>`;
+      break;
     }
 
-  } else {
-    body = `<div class="empty-state">Not yet researched — connect enrichment agents and upload deal data to enable this section.</div>`;
+    default:
+      body = '<div class="empty-state">Not yet researched — connect enrichment agents and upload deal data to enable this section.</div>';
   }
 
   return `
     <section class="memo-section" id="${k}" aria-labelledby="h-${k}">
       <p class="section-num">${n} · ${act}</p>
       <h2 class="memo-h2" id="h-${k}">
-        <a class="anchor-link" href="#${k}" aria-label="Link to section: ${title}">${title}</a>
+        <a class="anchor-link" href="#${k}" aria-label="Direct link to: ${title}">${title}</a>
       </h2>
       ${body}
       <p class="agent-tag" aria-hidden="true">→ ${agent}-agent</p>
@@ -562,7 +580,11 @@ function render(d) {
       </nav>
       <article id="memo-content" tabindex="-1">
         <header class="memo-hero">
-          <p class="kicker">${esc((d.stage || '').toUpperCase())}${d.sector ? ' · ' + esc(d.sector.toUpperCase()) : ''}${d.hq ? ' · ' + esc(d.hq.toUpperCase()) : ''}</p>
+          <p class="kicker">
+            ${esc((d.stage || '').toUpperCase())}
+            ${d.sector ? ' · ' + esc(d.sector.toUpperCase()) : ''}
+            ${d.hq     ? ' · ' + esc(d.hq.toUpperCase())     : ''}
+          </p>
           <h1 class="memo-h1">${esc(d.name || d.id)}.</h1>
           <p class="lede">${esc(d.thesis || 'Thesis not yet captured.')}</p>
           <div class="chips" aria-label="Deal snapshot">
@@ -579,8 +601,8 @@ function render(d) {
   // Update page title
   document.title = `${d.name || d.id} · DealLens`;
 
-  // TOC IntersectionObserver for active-section highlighting
-  const tocLinks = document.querySelectorAll('.toc-link[data-section]');
+  // TOC active-section via IntersectionObserver
+  const tocLinks  = document.querySelectorAll('.toc-link[data-section]');
   const sectionMap = new Map();
   tocLinks.forEach(link => {
     const el = document.getElementById(link.dataset.section);
@@ -601,11 +623,11 @@ function render(d) {
 }
 
 // -----------------------------------------------------------------------
-// Load
+// Load deal from ?id= parameter
 // -----------------------------------------------------------------------
 async function load() {
   const app = document.getElementById('app');
-  const id = new URLSearchParams(location.search).get('id');
+  const id  = new URLSearchParams(location.search).get('id');
 
   if (!id) {
     app.innerHTML = `
@@ -619,7 +641,7 @@ async function load() {
 
   try {
     const r = await fetch('./deals/' + encodeURIComponent(id) + '.json', { cache: 'no-store' });
-    if (!r.ok) throw new Error('not-found');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
     render(await r.json());
   } catch (e) {
     app.innerHTML = `
@@ -636,7 +658,7 @@ async function load() {
 }
 
 // -----------------------------------------------------------------------
-// Footer build meta
+// Footer — inject version from build.json
 // -----------------------------------------------------------------------
 (async function loadBuild() {
   try {
