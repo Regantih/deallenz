@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Submit a deal · DealLens</title>
 <style>
-:root{--ink:#1a1a1a;--paper:#f5f1e8;--rule:#d8d2c2;--accent:#8b6f3d;--mute:#6b6358;--card:#fbf8f0;--user:#1a1a1a;--bot:#fff}
+:root{--ink:#1a1a1a;--paper:#f5f1e8;--rule:#d8d2c2;--accent:#8b6f3d;--mute:#6b6358;--card:#fbf8f0;--user:#1a1a1a;--bot:#fff;--ok:#2d7a3a;--err:#b03030;--warn:#8b6f3d}
 *{box-sizing:border-box}
 body{margin:0;background:var(--paper);color:var(--ink);font-family:Georgia,'Times New Roman',serif;line-height:1.55}
 header{padding:18px 32px;border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center}
@@ -32,7 +32,30 @@ header nav a{margin-left:24px;font-weight:400;color:var(--mute)}
 .field b{font-family:'Courier New',monospace;font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.1em;padding-top:2px}
 .field span{color:var(--ink);word-break:break-word}
 .field span.empty{color:var(--rule);font-style:italic}
-.cfg{margin-top:18px;border-top:1px solid var(--rule);padding-top:16px}
+/* --- Path B: data room link section --- */
+.pathb{margin-top:20px;border-top:2px solid var(--rule);padding-top:18px}
+.pathb h2{margin:0 0 6px}
+.pathb .lede{margin-bottom:12px}
+.pathb-row{display:flex;gap:8px;align-items:center}
+.pathb-row input{flex:1;padding:9px 12px;border:1px solid var(--rule);border-radius:6px;font-family:inherit;font-size:13px;background:#fff}
+.pathb-row button{padding:9px 14px;border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+.pathb-row button:disabled{opacity:.4;cursor:not-allowed}
+.ingest-status{margin-top:10px;font-size:12px;font-family:'Courier New',monospace}
+.ingest-status.hidden{display:none}
+.ingest-job{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;padding:8px 10px;border:1px solid var(--rule);border-radius:6px;background:var(--card)}
+.ingest-job .job-icon{font-size:16px;line-height:1;flex-shrink:0}
+.ingest-job .job-body{flex:1;min-width:0}
+.ingest-job .job-id{color:var(--mute);font-size:10px;letter-spacing:.08em}
+.ingest-job .job-type{text-transform:uppercase;font-size:10px;letter-spacing:.1em;color:var(--accent);margin-bottom:2px}
+.ingest-job .job-state{font-size:12px;font-weight:700}
+.ingest-job .job-state.queued{color:var(--warn)}
+.ingest-job .job-state.processing{color:var(--warn)}
+.ingest-job .job-state.done{color:var(--ok)}
+.ingest-job .job-state.failed{color:var(--err)}
+.ingest-job .job-note{font-size:11px;color:var(--mute);margin-top:2px;word-break:break-all}
+.source-badge{display:inline-block;background:var(--rule);border-radius:4px;padding:1px 5px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);margin-right:4px}
+/* --- Agent settings & actions --- */
+.cfg{margin-top:20px;border-top:1px solid var(--rule);padding-top:16px}
 .cfg label{display:block;font-size:12px;font-family:'Courier New',monospace;color:var(--mute);text-transform:uppercase;letter-spacing:.1em;margin:10px 0 4px}
 .cfg input,.cfg select{width:100%;padding:8px 10px;border:1px solid var(--rule);border-radius:4px;font-family:inherit;font-size:13px;background:#fff}
 .cfg .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -50,14 +73,26 @@ header nav a{margin-left:24px;font-weight:400;color:var(--mute)}
 <header><a href="./">DealLens · Marketlogic Investors</a><nav><a href="./">Memo</a><a href="./deals.html">Pipeline</a><a href="./submit.html">Submit</a></nav></header>
 <div class="layout">
   <section class="chat">
-    <div class="chathead"><h1>Tell me about the deal.</h1><p>Talk to the intake agent in plain English. It listens, asks follow-ups, and structures everything into a deal record. The four enrichment agents (ingest · research · team · unit-econ) take it from there.</p></div>
+    <div class="chathead"><h1>Tell me about the deal.</h1><p>Talk to the intake agent in plain English. It listens, asks follow-ups, and structures everything into a deal record. Four enrichment agents (ingest · research · team · unit-econ) take it from there.</p></div>
     <div class="msgs" id="msgs"></div>
-    <div class="composer"><textarea id="inp" placeholder="e.g. We're looking at PQC Bank, a seed-stage fintech in Austin. They sell post-quantum crypto to community banks..." rows="1"></textarea><button id="send">Send</button></div>
+    <div class="composer"><textarea id="inp" placeholder="e.g. We’re looking at PQC Bank, a seed-stage fintech in Austin. They sell post-quantum crypto to community banks…" rows="1"></textarea><button id="send">Send</button></div>
   </section>
   <aside class="side">
     <h2>Live deal record</h2>
     <p class="lede">Updated as the agent extracts fields from the conversation.</p>
     <div id="fields"></div>
+
+    <!-- Path B: data-room / document link ingest -->
+    <div class="pathb">
+      <h2>Path B — Data room link</h2>
+      <p class="lede">Paste a Google Drive folder, Dropbox folder, Notion page, or any HTTPS URL. The ingest agent will fetch and parse it.<br><em style="font-size:11px;color:var(--mute)">Requires a deal ID from the conversation above first.</em></p>
+      <div class="pathb-row">
+        <input id="drLink" type="url" placeholder="https://drive.google.com/drive/folders/…"/>
+        <button id="drIngest" disabled>Ingest</button>
+      </div>
+      <div id="ingestStatus" class="ingest-status hidden"></div>
+    </div>
+
     <div class="cfg">
       <h2 style="margin-bottom:8px">Agent settings</h2>
       <label>Provider</label>
@@ -65,7 +100,7 @@ header nav a{margin-left:24px;font-weight:400;color:var(--mute)}
       <label>Model</label>
       <input id="model" value="claude-3-5-sonnet-latest"/>
       <label>API key (stored locally only)</label>
-      <input id="key" type="password" placeholder="sk-..."/>
+      <input id="key" type="password" placeholder="sk-…"/>
     </div>
     <div class="actions">
       <button class="primary" id="finish">Finalize deal record</button>
@@ -75,78 +110,321 @@ header nav a{margin-left:24px;font-weight:400;color:var(--mute)}
   </aside>
 </div>
 <script>
+// ---------------------------------------------------------------------------
+// Field manifest
+// ---------------------------------------------------------------------------
 const FIELDS=[['name','Company'],['stage','Stage'],['sector','Sector'],['hq','HQ'],['url','Website'],['thesis','Thesis'],['ask','Ask'],['premoney','Pre-money'],['lead','Lead'],['icp','ICP'],['jtbd','JTBD'],['wtp','WTP'],['founders','Founders'],['deck','Deck'],['dataroom','Dataroom'],['model','Model'],['arr','ARR'],['mom','MoM %'],['logos','Logos'],['nrr','NRR %']];
+
+// ---------------------------------------------------------------------------
+// LLM system prompt
+// ---------------------------------------------------------------------------
 const SYS=`You are the DealLens intake agent for Marketlogic Investors LLC. Your only job: have a natural conversation with a VC analyst about a deal, and quietly extract a structured record. After EVERY user message, reply with two parts joined by a literal line containing only ---JSON---:\n1) A short, conversational reply (≤2 sentences) that asks ONE follow-up question targeting the most important missing field.\n2) A JSON object with any fields you can confidently extract so far. Use these keys (omit unknowns): name, stage (pre-seed|seed|series-a|series-b|growth), sector, hq, url, thesis, ask (USD number), premoney (USD number), lead, icp, jtbd, wtp, founders (array of names or LinkedIn URLs), deck, dataroom, model, arr (USD number), mom (number, %), logos (number), nrr (number, %).\nNever invent data. Ask in this order of priority: name → stage/sector → thesis → ICP/JTBD → traction → team → round → docs.`;
+
+// ---------------------------------------------------------------------------
+// State
+// ---------------------------------------------------------------------------
 const state={msgs:[],record:{}};
 const $=id=>document.getElementById(id);
+
+// ---------------------------------------------------------------------------
+// Render
+// ---------------------------------------------------------------------------
 function renderMsgs(){const c=$('msgs');c.innerHTML='';for(const m of state.msgs){const d=document.createElement('div');d.className='msg '+m.role;d.textContent=m.content;c.appendChild(d);}c.scrollTop=c.scrollHeight;}
-function renderFields(){const c=$('fields');c.innerHTML='';for(const [k,label] of FIELDS){const v=state.record[k];const row=document.createElement('div');row.className='field';const val=v==null||v===''||(Array.isArray(v)&&!v.length)?'<span class="empty">—</span>':'<span>'+(Array.isArray(v)?v.join(', '):String(v))+'</span>';row.innerHTML='<b>'+label+'</b>'+val;c.appendChild(row);}}
+function renderFields(){
+  const c=$('fields');c.innerHTML='';
+  for(const [k,label] of FIELDS){
+    const v=state.record[k];
+    const row=document.createElement('div');row.className='field';
+    const val=v==null||v===''||(Array.isArray(v)&&!v.length)
+      ?'<span class="empty">—</span>'
+      :'<span>'+(Array.isArray(v)?v.join(', '):String(v))+'</span>';
+    row.innerHTML='<b>'+label+'</b>'+val;
+    c.appendChild(row);
+  }
+  // Enable ingest button only when we have a deal id
+  const hasId=!!(state.record.name||state.record.id);
+  $('drIngest').disabled=!hasId;
+}
+
+// ---------------------------------------------------------------------------
+// LLM call
+// ---------------------------------------------------------------------------
 function parseReply(text){const idx=text.indexOf('---JSON---');if(idx<0)return{reply:text,patch:{}};const reply=text.slice(0,idx).trim();const json=text.slice(idx+10).trim().replace(/^```json|^```|```$/g,'').trim();let patch={};try{patch=JSON.parse(json);}catch(e){}return{reply,patch};}
-async function callLLM(history){const provider=$('provider').value;const model=$('model').value.trim();const key=$('key').value.trim();if(provider==='local'||!key){return localExtract(history);}const messages=history.map(m=>({role:m.role==='user'?'user':'assistant',content:m.content}));try{if(provider==='anthropic'){const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model,max_tokens:1024,system:SYS,messages})});const d=await r.json();return d.content?.[0]?.text||JSON.stringify(d);}else{const r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'content-type':'application/json','authorization':'Bearer '+key},body:JSON.stringify({model,messages:[{role:'system',content:SYS},...messages]})});const d=await r.json();return d.choices?.[0]?.message?.content||JSON.stringify(d);}}catch(e){return'(agent error: '+e.message+')\n---JSON---\n{}';}}
+async function callLLM(history){const provider=$('provider').value;const model=$('model').value.trim();const key=$('key').value.trim();if(provider==='local'||!key){return localExtract(history);}const messages=history.map(m=>({role:m.role==='user'?'user':'assistant',content:m.content}));try{if(provider==='anthropic'){const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model,max_tokens:1024,system:SYS,messages})});const d=await r.json();return d.content?.[0]?.text||JSON.stringify(d);}else{const r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'content-type':'application/json','authorization':'Bearer '+key},body:JSON.stringify({model,messages:[{role:'system',content:SYS},...messages]})});const d=await r.json();return d.choices?.[0]?.message?.content||JSON.stringify(d);}}catch(e){return'(agent error: '+e.message+')\n---JSON---\n{}';}
+}
+
+// ---------------------------------------------------------------------------
+// Local heuristic extractor (no key required)
+// ---------------------------------------------------------------------------
 function localExtract(history){
   const all=history.filter(m=>m.role==='user').map(m=>m.content).join(' ');
   const patch={};
-  // Company name — look for explicit "called X", "company is X", or capitalized proper noun before "is"
   const mName=all.match(/(?:company(?:\s+(?:is|called|named))?|it'?s?\s+called|called|named)\s+([A-Z][A-Za-z0-9\s&.-]{1,40}?)(?:\s*[,.]|\s+(?:is\s|are\s|a\s|an\s|the\s))/);
   if(mName)patch.name=mName[1].trim();
-  // Stage
   const mStage=all.match(/\b(pre-?seed|seed|series[- ][abAB]|growth)\b/i);
   if(mStage)patch.stage=mStage[1].toLowerCase().replace(/\s/,'-');
-  // Sector
   const SECTORS=['fintech','vertical saas','saas','healthtech','health tech','biotech','edtech','proptech','legaltech','climate tech','cleantech','cybersecurity','data infrastructure','enterprise software','consumer','marketplace','logistics','insurtech'];
   for(const s of SECTORS){if(new RegExp('\\b'+s.replace(/ /g,'[\\s-]')+'\\b','i').test(all)){patch.sector=s;break;}}
-  // HQ / Location
   const mHQ=all.match(/(?:based\s+in|headquartered\s+in|hq(?:ed)?\s+in|located\s+in|out\s+of|offices?\s+in)\s+([A-Z][A-Za-z\s,]{2,40}?)(?:\s*[,.]|$)/i);
   if(mHQ)patch.hq=mHQ[1].trim().replace(/\s+/,' ');
-  // Thesis / value prop
   const mThesis=all.match(/(?:thesis|opportunity|the\s+bet\s+is|the\s+idea\s+is|they\s+(?:help|solve|enable|provide)|value\s+prop)[:\s]+(.{20,200}?)(?:\.\s|$)/i);
   if(mThesis)patch.thesis=mThesis[1].trim();
-  // Ask / raise amount
   const mAsk=all.match(/(?:rais(?:ing|ed?)|ask(?:ing)?|round(?:\s+(?:size|is))?)\s+\$?\s*(\d+(?:\.\d+)?)\s*(k|m|million|thousand)?(?!\s*arr)/i);
   if(mAsk){let n=parseFloat(mAsk[1]);if(/m|million/i.test(mAsk[2]||''))n*=1e6;else if(/k|thousand/i.test(mAsk[2]||''))n*=1e3;patch.ask=n;}
-  // Pre-money valuation (handles both "pre-money $15M" and "$15M pre-money")
   const mPre=all.match(/(?:(?:pre[- ]?money|pre[- ]?val(?:uation)?|valued\s+at)\s+\$?\s*(\d+(?:\.\d+)?)\s*(k|m|million|thousand)?|\$?\s*(\d+(?:\.\d+)?)\s*(k|m|million|thousand)?\s+pre[- ]?(?:money|val))/i);
   if(mPre){const raw=mPre[1]||mPre[3];const unit=mPre[2]||mPre[4]||'';let n=parseFloat(raw);if(/m|million/i.test(unit))n*=1e6;else if(/k|thousand/i.test(unit))n*=1e3;patch.premoney=n;}
-  // ARR
   const mARR=all.match(/\$?\s*(\d+(?:\.\d+)?)\s*(k|m|million|thousand)?\s*(?:arr|in\s+arr|annual\s+(?:recurring\s+)?revenue)/i);
   if(mARR){let n=parseFloat(mARR[1]);if(/m|million/i.test(mARR[2]||''))n*=1e6;else if(/k|thousand/i.test(mARR[2]||''))n*=1e3;patch.arr=n;}
-  // MoM growth
   const mMoM=all.match(/(\d+(?:\.\d+)?)\s*%\s*(?:mom|month[- ]?over[- ]?month|monthly\s+growth|m\/m)/i);
   if(mMoM)patch.mom=parseFloat(mMoM[1]);
-  // Logos / paying customers
   const mLogos=all.match(/(\d+)\s*(?:logos?|paying\s+customers?|enterprise\s+customers?|clients?)/i);
   if(mLogos)patch.logos=+mLogos[1];
-  // NRR (handles "118% NRR" and "NRR is 118%")
   const mNRR=all.match(/(?:nrr\s+(?:is\s+|of\s+)?(\d+(?:\.\d+)?)\s*%|(\d+(?:\.\d+)?)\s*%\s*nrr)/i);
   if(mNRR)patch.nrr=parseFloat(mNRR[1]||mNRR[2]);
-  // Use of funds
-  const mUse=all.match(/(?:use\s+of\s+funds?|spending\s+(?:it\s+)?on|going\s+towards?|capital\s+(?:for|towards?))[:\s]+(.{10,200}?)(?:\.\s|$)/i);
-  if(mUse)patch.use_of_funds=mUse[1].trim();
-  // Website
   const mURL=all.match(/(?:website|site|url|domain)\s*[:\s]+\s*((?:https?:\/\/)?(?:www\.)?[a-z0-9][a-z0-9-]{1,60}\.[a-z]{2,}(?:\/[^\s]*)?)/i);
   if(mURL)patch.url='https://'+mURL[1].replace(/^https?:\/\//,'');
-  const questions=[
-    'What\u2019s the company name and what do they do?',
-    'What stage and sector are they in?',
-    'One-line thesis \u2014 why this, why now?',
-    'Who\u2019s the ICP and what job do they hire this for?',
-    'Latest ARR and MoM growth rate?',
-    'Who are the founders (LinkedIn URLs help)?',
-    'Round size and pre-money valuation?',
-    'Deck or data-room link?'
-  ];
+  const questions=['What\u2019s the company name and what do they do?','What stage and sector are they in?','One-line thesis \u2014 why this, why now?','Who\u2019s the ICP and what job do they hire this for?','Latest ARR and MoM growth rate?','Who are the founders (LinkedIn URLs help)?','Round size and pre-money valuation?','Deck or data-room link?'];
   const i=Math.min(Math.floor(history.filter(m=>m.role==='user').length-1),questions.length-1);
   return questions[Math.max(0,i)]+'\n---JSON---\n'+JSON.stringify(patch);
 }
-async function send(){const inp=$('inp');const txt=inp.value.trim();if(!txt)return;state.msgs.push({role:'user',content:txt});inp.value='';renderMsgs();$('send').disabled=true;const thinking={role:'bot',content:'…'};state.msgs.push(thinking);renderMsgs();const out=await callLLM(state.msgs.filter(m=>m.role!=='sys'&&m!==thinking));const{reply,patch}=parseReply(out);state.msgs.pop();state.msgs.push({role:'bot',content:reply||'(no reply)'});Object.assign(state.record,Object.fromEntries(Object.entries(patch).filter(([,v])=>v!=null&&v!=='')));renderMsgs();renderFields();$('send').disabled=false;inp.focus();}
-function finalize(){const r={...state.record};r.id=(r.name||'deal').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');r.submitted_at=new Date().toISOString();r.status='intake';r.transcript=state.msgs.filter(m=>m.role!=='sys');state.msgs.push({role:'sys',content:'Deal record finalized — '+r.id});renderMsgs();const blob=new Blob([JSON.stringify(r,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='deals/'+r.id+'.json';a.click();}
+
+// ---------------------------------------------------------------------------
+// Chat send
+// ---------------------------------------------------------------------------
+async function send(){
+  const inp=$('inp');const txt=inp.value.trim();if(!txt)return;
+  state.msgs.push({role:'user',content:txt});inp.value='';
+  renderMsgs();$('send').disabled=true;
+  const thinking={role:'bot',content:'…'};
+  state.msgs.push(thinking);renderMsgs();
+  const out=await callLLM(state.msgs.filter(m=>m.role!=='sys'&&m!==thinking));
+  const{reply,patch}=parseReply(out);
+  state.msgs.pop();
+  state.msgs.push({role:'bot',content:reply||'(no reply)'});
+  Object.assign(state.record,Object.fromEntries(Object.entries(patch).filter(([,v])=>v!=null&&v!=='')));
+  renderMsgs();renderFields();
+  $('send').disabled=false;inp.focus();
+}
+
+// ---------------------------------------------------------------------------
+// Path B — data-room link ingest
+// ---------------------------------------------------------------------------
+
+/**
+ * Build a deal_id slug from the current record or prompt the user.
+ * Returns null if no deal name is available yet.
+ */
+function currentDealId(){
+  const name=state.record.name||state.record.id||'';
+  if(!name)return null;
+  return name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+}
+
+/** Friendly source-type labels for the UI */
+const SOURCE_LABELS={
+  google_drive_folder:'Google Drive folder',
+  google_drive_file:'Google Drive file',
+  dropbox_folder:'Dropbox folder',
+  notion_page:'Notion page',
+  generic_webpage:'Web page',
+};
+
+const STATUS_ICONS={
+  queued:'⏳',
+  processing:'⚡',
+  done:'✓',
+  failed:'✗',
+};
+
+/** Active ingest jobs displayed in the UI (job_id → element) */
+const jobElements={};
+
+function renderJobElement(job){
+  const icon=STATUS_ICONS[job.status]||'?';
+  const typeLabel=SOURCE_LABELS[job.source_type]||job.source_type||'Unknown source';
+  const stateClass='job-state '+job.status;
+  const stateText=job.status.charAt(0).toUpperCase()+job.status.slice(1);
+  const noteText=job.status==='done'
+    ?(job.result?._mock
+      ?'Mock ingest — no real files fetched. Real connector lands in PR#5.'
+      :'Ingested successfully.')
+    :job.status==='failed'
+    ?('Error: '+(job.error||'Unknown error'))
+    :job.status==='processing'
+    ?'Fetching and parsing…'
+    :'Waiting in queue…';
+  return `<div class="ingest-job" id="job-${job.id}">
+    <div class="job-icon">${icon}</div>
+    <div class="job-body">
+      <div class="job-type"><span class="source-badge">${typeLabel}</span></div>
+      <div class="${stateClass}">${stateText}</div>
+      <div class="job-note">${noteText}</div>
+      <div class="job-id">${job.id}</div>
+    </div>
+  </div>`;
+}
+
+function upsertJobInUI(job){
+  const container=$('ingestStatus');
+  container.classList.remove('hidden');
+  const existing=document.getElementById('job-'+job.id);
+  const html=renderJobElement(job);
+  if(existing){existing.outerHTML=html;}
+  else{container.insertAdjacentHTML('afterbegin',html);}
+}
+
+async function ingestLink(){
+  const url=$('drLink').value.trim();
+  const deal_id=currentDealId();
+  const btn=$('drIngest');
+
+  // --- Validation ---
+  if(!url){
+    showIngestError('Please paste a data-room URL first.');
+    return;
+  }
+  if(!deal_id){
+    showIngestError('Tell the agent about the company first so we have a deal ID.');
+    return;
+  }
+
+  let parsed;
+  try{ parsed=new URL(url); } catch(e){
+    showIngestError('That doesn’t look like a valid URL. Include the full https:// address.');
+    return;
+  }
+  if(parsed.protocol!=='https:'){
+    showIngestError('Only HTTPS URLs are accepted.');
+    return;
+  }
+
+  btn.disabled=true;
+  btn.textContent='Queuing…';
+
+  try{
+    // POST to /api/ingest-link
+    // In the static-HTML context (no backend running) this will 404—we catch
+    // that and explain the situation honestly rather than faking success.
+    const resp=await fetch('/api/ingest-link',{
+      method:'POST',
+      headers:{'content-type':'application/json'},
+      body:JSON.stringify({url,deal_id}),
+    });
+
+    if(!resp.ok && resp.status!==200){
+      // Backend not running — show an honest explanation
+      const errText=await resp.text().catch(()=>'');
+      if(resp.status===404||resp.status===405){
+        showIngestError(
+          'The /api/ingest-link endpoint is not running in this environment. '+
+          'Deploy to a Node.js or Vercel backend to enable live ingest. '+
+          'The ingest handler code is at api/ingest-link.ts.'
+        );
+      } else {
+        showIngestError('Server error '+resp.status+': '+(errText||'no detail'));
+      }
+      return;
+    }
+
+    const data=await resp.json();
+
+    if(!data.ok){
+      showIngestError('Ingest rejected: '+(data.detail||data.error||'unknown error'));
+      return;
+    }
+
+    // Success — show job card and begin polling
+    const job={
+      id:data.job_id,
+      deal_id,
+      url,
+      source_type:data.source_type,
+      status:'queued',
+      queued_at:new Date().toISOString(),
+      attempts:0,
+    };
+    upsertJobInUI(job);
+    $('drLink').value='';
+    pollJobStatus(data.job_id,deal_id);
+
+  } catch(e){
+    // Network failure (no backend at all) — honest error, no fake success
+    showIngestError(
+      'Could not reach /api/ingest-link. '+
+      (e.message||'Network error')+'. '+
+      'The ingest handler runs server-side; deploy the api/ directory to enable it.'
+    );
+  } finally{
+    btn.disabled=!currentDealId();
+    btn.textContent='Ingest';
+  }
+}
+
+function showIngestError(msg){
+  const container=$('ingestStatus');
+  container.classList.remove('hidden');
+  container.innerHTML='<div style="color:var(--err);font-size:12px;padding:6px 0;">'+msg+'</div>'+container.innerHTML;
+}
+
+/** Poll GET /api/ingest-link?job_id=... until done or failed */
+async function pollJobStatus(job_id,deal_id,attempts=0){
+  if(attempts>30)return; // stop after 30 polls (~60 s)
+  await new Promise(r=>setTimeout(r,2000));
+  try{
+    const resp=await fetch('/api/ingest-link?job_id='+encodeURIComponent(job_id));
+    if(!resp.ok)return;
+    const data=await resp.json();
+    if(data.job){
+      upsertJobInUI(data.job);
+      if(data.job.status==='done'||data.job.status==='failed')return;
+    }
+    pollJobStatus(job_id,deal_id,attempts+1);
+  }catch(e){
+    // Polling errors are non-fatal; the user already saw the queued card
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Finalize
+// ---------------------------------------------------------------------------
+function finalize(){
+  const r={...state.record};
+  r.id=(r.name||'deal').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+  r.submitted_at=new Date().toISOString();
+  r.status='intake';
+  r.transcript=state.msgs.filter(m=>m.role!=='sys');
+  state.msgs.push({role:'sys',content:'Deal record finalized — '+r.id});
+  renderMsgs();
+  const blob=new Blob([JSON.stringify(r,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='deals/'+r.id+'.json';a.click();
+}
+
+// ---------------------------------------------------------------------------
+// Event wiring
+// ---------------------------------------------------------------------------
 $('send').addEventListener('click',send);
 $('inp').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}});
 $('finish').addEventListener('click',finalize);
 $('download').addEventListener('click',finalize);
 $('reset').addEventListener('click',()=>{state.msgs=[];state.record={};boot();});
-$('provider').addEventListener('change',()=>{const p=$('provider').value;$('model').value=p==='anthropic'?'claude-3-5-sonnet-latest':p==='openai'?'gpt-4o-mini':'—';});
-function boot(){state.msgs.push({role:'bot',content:"Hi — I'm the DealLens intake agent. Tell me about the deal in your own words. I'll ask follow-ups and quietly fill in the structured record on the right. To start: what's the company name and what do they do?"});renderMsgs();renderFields();}
+$('provider').addEventListener('change',()=>{
+  const p=$('provider').value;
+  $('model').value=p==='anthropic'?'claude-3-5-sonnet-latest':p==='openai'?'gpt-4o-mini':'—';
+});
+$('drIngest').addEventListener('click',ingestLink);
+// Allow Enter in the link field
+$('drLink').addEventListener('keydown',e=>{
+  if(e.key==='Enter'){e.preventDefault();ingestLink();}
+});
+
+// ---------------------------------------------------------------------------
+// Boot
+// ---------------------------------------------------------------------------
+function boot(){
+  state.msgs.push({role:'bot',content:"Hi — I'm the DealLens intake agent. Tell me about the deal in your own words. I'll ask follow-ups and quietly fill in the structured record on the right.\n\nTo start: what's the company name and what do they do?"});
+  renderMsgs();renderFields();
+}
 boot();
 </script>
 </body>
