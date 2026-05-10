@@ -3,135 +3,250 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Pipeline · DealLens</title>
+<title>Agents · DealLens</title>
+<link rel="stylesheet" href="./styles/tokens.css"/>
 <style>
-:root{--ink:#1a1a1a;--paper:#f5f1e8;--rule:#d8d2c2;--accent:#8b6f3d;--mute:#6b6358;--card:#fbfbf8;--ok:#2f7d4f;--err:#9b2c2c}
-*{box-sizing:border-box}
-body{margin:0;background:var(--paper);color:var(--ink);font-family:Georgia,'Times New Roman',serif;line-height:1.55}
-header.top{padding:18px 32px;border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center;background:var(--paper);position:sticky;top:0;z-index:10}
-header.top a{color:var(--ink);text-decoration:none;font-weight:700}
-header.top nav a{margin-left:24px;font-weight:400;color:var(--mute)}
-header.top nav a.active{color:var(--ink);font-weight:600}
-.wrap{max-width:1200px;margin:32px auto;padding:0 32px}
-h1{font-size:40px;line-height:1.1;margin:0 0 8px}
-.lede{color:var(--mute);font-size:17px;margin:0 0 24px;max-width:720px}
-.kicker{font-family:'Courier New',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
-.grid{display:grid;grid-template-columns:1fr 360px;gap:32px}
-.agents{display:flex;flex-direction:column;gap:18px}
-.agent{background:var(--card);border:1px solid var(--rule);border-radius:6px;padding:20px}
-.ah{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-.agent h2{margin:0;font-size:22px}
-.role{color:var(--mute);font-size:13px;margin:0 0 12px}
-.status{font-family:'Courier New',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:99px;border:1px solid var(--rule);color:var(--mute)}
-.status.run{color:var(--accent);border-color:var(--accent)}
-.status.ok{color:var(--ok);border-color:var(--ok)}
-.log{background:#1a1a1a;color:#e8e4d8;font-family:'Courier New',monospace;font-size:12px;padding:12px;border-radius:4px;max-height:200px;overflow:auto;white-space:pre-wrap;margin:8px 0;display:none}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--color-paper);color:var(--color-ink);font-family:var(--font-serif);line-height:var(--leading-normal)}
+
+.skip-link{position:absolute;left:-999px;width:1px;height:1px;overflow:hidden;z-index:var(--z-modal);background:var(--color-ink);color:var(--color-paper);padding:8px 16px;text-decoration:none;border-radius:var(--radius-sm);font-family:var(--font-sans)}
+.skip-link:focus{position:fixed;left:16px;top:16px;width:auto;height:auto;overflow:visible}
+
+.app-header{position:sticky;top:0;z-index:var(--z-sticky);background:var(--color-paper);border-bottom:1px solid var(--color-rule);height:var(--header-h);padding:0 var(--space-6);display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:var(--space-2);text-decoration:none;color:var(--color-ink);font-weight:700;font-family:var(--font-sans);font-size:var(--text-sm);letter-spacing:.02em}
+.brand-logo{width:20px;height:20px;background:var(--color-ink);border-radius:var(--radius-sm);position:relative;flex-shrink:0}
+.brand-logo::after{content:'';position:absolute;inset:4px;border:2px solid var(--color-paper);border-radius:2px}
+.app-nav{display:flex;gap:var(--space-5);align-items:center}
+.nav-link{color:var(--color-mute);text-decoration:none;font-family:var(--font-sans);font-size:var(--text-sm);padding:4px 0;border-bottom:2px solid transparent;transition:color .15s,border-color .15s}
+.nav-link:hover{color:var(--color-ink)}
+.nav-link.active{color:var(--color-ink);border-bottom-color:var(--color-ink);font-weight:600}
+.nav-link--stub{opacity:.45;cursor:not-allowed;pointer-events:none}
+
+.page-wrap{max-width:var(--container-lg);margin:0 auto;padding:var(--space-6) var(--space-6) var(--space-8)}
+.kicker{font-family:var(--font-mono);font-size:var(--text-xs);letter-spacing:.14em;text-transform:uppercase;color:var(--color-accent);margin:0 0 var(--space-2)}
+h1{font-size:var(--text-4xl);line-height:var(--leading-tight);margin:0 0 var(--space-2)}
+.lede{color:var(--color-mute);font-size:var(--text-lg);margin:0 0 var(--space-5);max-width:640px}
+
+.bar{display:flex;gap:var(--space-3);margin-bottom:var(--space-6);align-items:center;flex-wrap:wrap}
+.btn{font-family:var(--font-sans);font-size:var(--text-sm);padding:9px 18px;border:1px solid var(--color-ink);background:var(--color-ink);color:var(--color-paper);cursor:pointer;border-radius:var(--radius-md)}
+.btn:hover{background:#333}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.ghost{background:var(--color-paper);color:var(--color-ink)}
+.btn.ghost:hover{background:var(--color-card)}
+.meta-text{color:var(--color-mute);font-size:var(--text-sm);font-family:var(--font-mono)}
+
+.grid{display:grid;grid-template-columns:1fr 340px;gap:var(--space-6)}
+.agents-col{display:flex;flex-direction:column;gap:var(--space-5)}
+
+.agent-card{background:var(--color-card);border:1px solid var(--color-rule);border-radius:var(--radius-md);padding:var(--space-5)}
+.agent-hd{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;gap:var(--space-3)}
+.agent-name{margin:0;font-size:var(--text-xl);line-height:var(--leading-tight)}
+.agent-role{color:var(--color-mute);font-family:var(--font-sans);font-size:var(--text-sm);margin:0 0 var(--space-3)}
+.status-badge{font-family:var(--font-mono);font-size:var(--text-xs);letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:var(--radius-full);border:1px solid var(--color-rule);color:var(--color-mute);white-space:nowrap;flex-shrink:0}
+.status-badge.run{color:var(--color-accent);border-color:var(--color-accent)}
+.status-badge.ok{color:var(--color-ok);border-color:var(--color-ok)}
+.tools{font-family:var(--font-mono);font-size:var(--text-xs);color:var(--color-mute);letter-spacing:.08em;margin-bottom:var(--space-3)}
+
+.log{background:#1a1a1a;color:#e8e4d8;font-family:var(--font-mono);font-size:12px;padding:var(--space-3);border-radius:var(--radius-sm);max-height:180px;overflow:auto;white-space:pre-wrap;margin:var(--space-2) 0;display:none}
 .log.show{display:block}
-.evidence{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:10px}
-.ev{border:1px solid var(--rule);border-radius:4px;padding:10px;font-size:13px;background:var(--paper)}
-.ev b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);margin-bottom:4px}
-aside{background:var(--card);border:1px solid var(--rule);border-radius:6px;padding:20px;height:fit-content;position:sticky;top:90px}
-aside h3{margin:0 0 12px;font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
-.row{display:flex;justify-content:space-between;border-bottom:1px dashed var(--rule);padding:6px 0;font-size:14px}
-.row span:first-child{font-family:'Courier New',monospace;font-size:11px;text-transform:uppercase;color:var(--mute);letter-spacing:.08em}
-.row span:last-child{text-align:right;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-button{font-family:Georgia,serif;font-size:15px;padding:10px 18px;border:1px solid var(--ink);background:var(--ink);color:var(--paper);cursor:pointer;border-radius:4px;width:100%;margin-bottom:8px}
-button.ghost{background:var(--paper);color:var(--ink)}
-button:disabled{opacity:.4;cursor:not-allowed}
-.bar{display:flex;gap:12px;margin-bottom:24px;align-items:center;flex-wrap:wrap}
-.bar button{width:auto}
-.meta{color:var(--mute);font-size:13px;font-family:'Courier New',monospace}
-.empty{padding:20px;text-align:center;color:var(--mute);background:var(--card);border:1px dashed var(--rule);border-radius:6px}
-.tools{font-family:'Courier New',monospace;font-size:11px;color:var(--mute);letter-spacing:.08em}
+
+.evidence{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:var(--space-2);margin-top:var(--space-3)}
+.ev{border:1px solid var(--color-rule);border-radius:var(--radius-sm);padding:var(--space-3);font-family:var(--font-sans);font-size:var(--text-sm);background:var(--color-paper)}
+.ev-label{display:block;font-family:var(--font-mono);font-size:var(--text-xs);text-transform:uppercase;letter-spacing:.1em;color:var(--color-accent);margin-bottom:4px}
+
+aside.record-panel{background:var(--color-card);border:1px solid var(--color-rule);border-radius:var(--radius-md);padding:var(--space-5);height:fit-content;position:sticky;top:calc(var(--header-h) + var(--space-4))}
+aside h3{margin:0 0 var(--space-3);font-family:var(--font-mono);font-size:var(--text-xs);letter-spacing:.14em;text-transform:uppercase;color:var(--color-accent)}
+.record-row{display:flex;justify-content:space-between;border-bottom:1px dashed var(--color-rule);padding:6px 0;font-family:var(--font-sans);font-size:var(--text-sm)}
+.record-key{font-family:var(--font-mono);font-size:var(--text-xs);text-transform:uppercase;color:var(--color-mute);letter-spacing:.08em;padding-top:1px}
+.record-val{text-align:right;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.record-empty{font-style:italic;color:var(--color-mute);font-size:var(--text-sm);padding:var(--space-3) 0}
+.aside-actions{margin-top:var(--space-4);display:flex;flex-direction:column;gap:8px}
+.aside-actions .btn{width:100%;text-align:center}
+
+.app-footer{border-top:1px solid var(--color-rule);padding:var(--space-5) var(--space-6);display:flex;justify-content:space-between;align-items:center;font-family:var(--font-sans);font-size:var(--text-xs);color:var(--color-mute)}
+.app-footer a{color:var(--color-mute);text-decoration:none}
+.app-footer a:hover{color:var(--color-ink);text-decoration:underline}
+
+@media(max-width:900px){.grid{grid-template-columns:1fr}aside.record-panel{position:static}}
+@media(max-width:600px){.app-header{padding:0 var(--space-4)}.page-wrap{padding:var(--space-5) var(--space-4)}.app-footer{flex-direction:column;gap:var(--space-2);text-align:center}}
 </style>
 </head>
 <body>
-<header class="top">
-  <a href="index.html">DealLens · Marketlogic Investors</a>
-  <nav>
-    <a href="deal.html">Memo</a>
-    <a href="pipeline.html" class="active">Pipeline</a>
-    <a href="submit.html">Submit</a>
-    <a href="deals.html">Vault</a>
+<a class="skip-link" href="#main-content">Skip to content</a>
+
+<header class="app-header" role="banner">
+  <a class="brand" href="./index.html" aria-label="DealLens home">
+    <span class="brand-logo" role="img" aria-hidden="true"></span>
+    <span>DealLens · Marketlogic Investors</span>
+  </a>
+  <nav class="app-nav" aria-label="Main navigation">
+    <a href="./deals.html" class="nav-link">Pipeline</a>
+    <a href="./submit.html" class="nav-link">Submit</a>
+    <a class="nav-link nav-link--stub" aria-disabled="true" tabindex="-1">Settings</a>
   </nav>
 </header>
-<div class="wrap">
-  <div class="kicker">04 · ENRICHMENT</div>
+
+<main class="page-wrap" id="main-content">
+  <p class="kicker">04 · Enrichment</p>
   <h1>Agents at work.</h1>
   <p class="lede">Four specialist agents take the intake record, hit their tools, cite evidence, and hand a structured payload to the memo writer.</p>
   <div class="bar">
-    <button id="runAll">Run all agents</button>
-    <button id="reset" class="ghost">Reset</button>
-    <span class="meta" id="meta">No deal loaded</span>
+    <button class="btn" id="runAll">Run all agents</button>
+    <button class="btn ghost" id="reset">Reset</button>
+    <span class="meta-text" id="meta" aria-live="polite">No deal loaded</span>
   </div>
   <div class="grid">
-    <div class="agents" id="agents"></div>
-    <aside>
+    <div class="agents-col" id="agents" aria-label="Agent list" role="list"></div>
+    <aside class="record-panel" aria-label="Live deal record">
       <h3>Live record</h3>
-      <div id="record"><div class="empty">Submit a deal first.</div></div>
-      <div style="margin-top:16px">
-        <button onclick="location.href='submit.html'" class="ghost">← Back to intake</button>
-        <button id="toMemo" disabled>Write memo →</button>
+      <div id="record"><p class="record-empty">Submit a deal first.</p></div>
+      <div class="aside-actions">
+        <button class="btn ghost" onclick="location.href='submit.html'">&#8592; Back to intake</button>
+        <button class="btn" id="toMemo" disabled aria-disabled="true">Write memo →</button>
       </div>
     </aside>
   </div>
-</div>
+</main>
+
+<footer class="app-footer" role="contentinfo">
+  <span>© 2026 Marketlogic Investors LLC · Internal use only.</span>
+  <span id="build-meta" aria-label="App version"></span>
+</footer>
+
 <script>
-const AGENTS=[
- {id:'ingest',name:'Ingest Agent',role:'Normalizes the intake record, validates schema, dedupes against the vault.',tools:['schema.validate','vault.lookup','record.normalize']},
- {id:'research',name:'Research Agent',role:'Pulls market signals, comps, and recent news. Cites every claim.',tools:['web.search','crunchbase.lookup','news.recent']},
- {id:'team',name:'Team Agent',role:'Scores founders on domain fit, prior outcomes, and execution velocity.',tools:['linkedin.profile','github.activity','team.score']},
- {id:'unitecon',name:'Unit-Econ Agent',role:'Builds bottoms-up model: ARR, GM, CAC payback, burn multiple, runway.',tools:['model.build','sensitivity.run','benchmark.compare']}
+'use strict';
+const AGENTS = [
+  { id:'ingest',   name:'Ingest Agent',    role:'Normalises the intake record, validates schema, dedupes against the vault.',         tools:['schema.validate','vault.lookup','record.normalize'] },
+  { id:'research', name:'Research Agent',  role:'Pulls market signals, comps, and recent news. Cites every claim.',                   tools:['web.search','crunchbase.lookup','news.recent'] },
+  { id:'team',     name:'Team Agent',      role:'Scores founders on domain fit, prior outcomes, and execution velocity.',             tools:['linkedin.profile','github.activity','team.score'] },
+  { id:'unitecon', name:'Unit-Econ Agent', role:'Builds bottoms-up model: ARR, GM, CAC payback, burn multiple, runway.',             tools:['model.build','sensitivity.run','benchmark.compare'] }
 ];
-const $=id=>document.getElementById(id);
-const rec=()=>{try{return JSON.parse(localStorage.getItem('deallens:record')||'{}')}catch(e){return{}}};
-const saveEnrich=(id,out)=>{const e=JSON.parse(localStorage.getItem('deallens:enrich')||'{}');e[id]=out;localStorage.setItem('deallens:enrich',JSON.stringify(e))};
-const FIELDS=['company','stage','sector','hq','website','thesis','ask','wtp','founders','arr','mom','nrr'];
-function renderRecord(){const r=rec();const el=$('record');if(!r.company){el.innerHTML='<div class="empty">Submit a deal first.</div>';$('meta').textContent='No deal loaded';return}
- el.innerHTML=FIELDS.map(f=>`<div class="row"><span>${f}</span><span>${r[f]||'—'}</span></div>`).join('');
- $('meta').textContent=`Loaded: ${r.company} · ${r.stage||'?'} · ${r.sector||'?'}`}
-function renderAgents(){$('agents').innerHTML=AGENTS.map(a=>`<div class="agent" id="a-${a.id}"><div class="ah"><h2>${a.name}</h2><span class="status" id="s-${a.id}">idle</span></div><p class="role">${a.role}</p><div class="tools">TOOLS · ${a.tools.join(' · ')}</div><div class="log" id="l-${a.id}"></div><div class="evidence" id="e-${a.id}"></div></div>`).join('')}
-function setStatus(id,s,cls){const el=$('s-'+id);el.textContent=s;el.className='status '+(cls||'')}
-function log(id,line){const el=$('l-'+id);el.classList.add('show');el.textContent+=line+'\n';el.scrollTop=el.scrollHeight}
-function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
-async function runAgent(a){const r=rec();setStatus(a.id,'running','run');log(a.id,`[${new Date().toISOString().slice(11,19)}] boot → loading record for ${r.company||'?'}`);
- for(const t of a.tools){await sleep(400+Math.random()*600);log(a.id,`  → tool: ${t}() … ok`)}
- const out=mockOutput(a.id,r);log(a.id,`[done] emitted ${out.evidence.length} evidence items`);
- $('e-'+a.id).innerHTML=out.evidence.map(e=>`<div class="ev"><b>${e.label}</b>${e.value}</div>`).join('');
- saveEnrich(a.id,out);setStatus(a.id,'complete','ok')}
-function mockOutput(id,r){
- const filledKeys=['company','stage','sector','hq','website','thesis','ask','premoney','arr','mom','logos','nrr'];
- const filled=filledKeys.filter(k=>r[k]!=null&&r[k]!=='').length;
- const pct=Math.round(filled/filledKeys.length*100)+'%';
- if(id==='ingest')return{evidence:[
-   {label:'schema',value:'valid'},
-   {label:'duplicates',value:'none in vault'},
-   {label:'completeness',value:pct}
- ]};
- if(id==='research')return{evidence:[
-   {label:'status',value:'Research agent not connected'},
-   {label:'TAM',value:'Requires web search tools'},
-   {label:'comps',value:'Requires Crunchbase / Pitchbook access'},
-   {label:'news',value:'Requires news search tools'}
- ]};
- if(id==='team')return{evidence:[
-   {label:'status',value:'Team agent not connected'},
-   {label:'domain fit',value:'Requires LinkedIn profile access'},
-   {label:'velocity',value:'Requires GitHub activity data'}
- ]};
- if(id==='unitecon')return{evidence:[
-   {label:'ARR',value:r.arr?'$'+Number(r.arr).toLocaleString():'Not provided'},
-   {label:'MoM growth',value:r.mom?r.mom+'%':'Not provided'},
-   {label:'NRR',value:r.nrr?r.nrr+'%':'Not provided'},
-   {label:'status',value:'GM, CAC, burn multiple require financial model upload'}
- ]};
- return{evidence:[]}}
-async function runAll(){if(!rec().company){alert('Submit a deal first.');return}
- $('runAll').disabled=true;for(const a of AGENTS)await runAgent(a);$('toMemo').disabled=false;$('runAll').disabled=false}
-$('runAll').onclick=runAll;
-$('reset').onclick=()=>{localStorage.removeItem('deallens:enrich');renderAgents();$('toMemo').disabled=true};
-$('toMemo').onclick=()=>location.href='deal.html';
-renderAgents();renderRecord();
+
+const RECORD_FIELDS = ['company','stage','sector','hq','website','thesis','ask','wtp','founders','arr','mom','nrr'];
+
+const rec    = () => { try { return JSON.parse(localStorage.getItem('deallens:record') || '{}'); } catch(e) { return {}; } };
+const saveEnrich = (id, out) => { const e = JSON.parse(localStorage.getItem('deallens:enrich') || '{}'); e[id] = out; localStorage.setItem('deallens:enrich', JSON.stringify(e)); };
+
+function renderRecord() {
+  const r = rec();
+  const el = document.getElementById('record');
+  if (!r.company) {
+    el.innerHTML = '<p class="record-empty">Submit a deal first.</p>';
+    document.getElementById('meta').textContent = 'No deal loaded';
+    return;
+  }
+  el.innerHTML = RECORD_FIELDS
+    .filter(f => r[f] != null && r[f] !== '')
+    .map(f => `<div class="record-row"><span class="record-key">${f}</span><span class="record-val">${Array.isArray(r[f]) ? r[f].join(', ') : r[f]}</span></div>`)
+    .join('');
+  document.getElementById('meta').textContent = `Loaded: ${r.company} · ${r.stage || '?'} · ${r.sector || '?'}`;
+}
+
+function renderAgents() {
+  document.getElementById('agents').innerHTML = AGENTS.map(a => `
+    <div class="agent-card" id="a-${a.id}" role="listitem">
+      <div class="agent-hd">
+        <h2 class="agent-name">${a.name}</h2>
+        <span class="status-badge" id="s-${a.id}" aria-live="polite">idle</span>
+      </div>
+      <p class="agent-role">${a.role}</p>
+      <p class="tools">TOOLS · ${a.tools.join(' · ')}</p>
+      <div class="log" id="l-${a.id}" aria-label="${a.name} log" role="log"></div>
+      <div class="evidence" id="e-${a.id}" aria-label="${a.name} evidence"></div>
+    </div>`).join('');
+}
+
+function setStatus(id, s, cls) {
+  const el = document.getElementById('s-' + id);
+  el.textContent = s;
+  el.className = 'status-badge ' + (cls || '');
+}
+
+function log(id, line) {
+  const el = document.getElementById('l-' + id);
+  el.classList.add('show');
+  el.textContent += line + '\n';
+  el.scrollTop = el.scrollHeight;
+}
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+async function runAgent(a) {
+  const r = rec();
+  setStatus(a.id, 'running', 'run');
+  log(a.id, `[${new Date().toISOString().slice(11,19)}] boot → loading record for ${r.company || '?'}`);
+  for (const t of a.tools) {
+    await sleep(400 + Math.random() * 600);
+    log(a.id, `  → tool: ${t}() … ok`);
+  }
+  const out = mockOutput(a.id, r);
+  log(a.id, `[done] emitted ${out.evidence.length} evidence items`);
+  document.getElementById('e-' + a.id).innerHTML = out.evidence
+    .map(e => `<div class="ev"><span class="ev-label">${e.label}</span>${e.value}</div>`).join('');
+  saveEnrich(a.id, out);
+  setStatus(a.id, 'complete', 'ok');
+}
+
+function mockOutput(id, r) {
+  const filledKeys = ['company','stage','sector','hq','website','thesis','ask','premoney','arr','mom','logos','nrr'];
+  const filled = filledKeys.filter(k => r[k] != null && r[k] !== '').length;
+  const pct = Math.round(filled / filledKeys.length * 100) + '%';
+  if (id === 'ingest') return { evidence: [
+    { label:'schema',       value:'valid' },
+    { label:'duplicates',   value:'none in vault' },
+    { label:'completeness', value:pct }
+  ]};
+  if (id === 'research') return { evidence: [
+    { label:'status', value:'Research agent not connected' },
+    { label:'TAM',    value:'Requires web search tools' },
+    { label:'comps',  value:'Requires Crunchbase / Pitchbook access' },
+    { label:'news',   value:'Requires news search tools' }
+  ]};
+  if (id === 'team') return { evidence: [
+    { label:'status',      value:'Team agent not connected' },
+    { label:'domain fit',  value:'Requires LinkedIn profile access' },
+    { label:'velocity',    value:'Requires GitHub activity data' }
+  ]};
+  if (id === 'unitecon') return { evidence: [
+    { label:'ARR',      value: r.arr  ? '$' + Number(r.arr).toLocaleString() : 'Not provided' },
+    { label:'MoM',      value: r.mom  ? r.mom + '%' : 'Not provided' },
+    { label:'NRR',      value: r.nrr  ? r.nrr + '%' : 'Not provided' },
+    { label:'status',   value:'GM, CAC, burn multiple require financial model upload' }
+  ]};
+  return { evidence: [] };
+}
+
+async function runAll() {
+  if (!rec().company) { alert('Submit a deal first.'); return; }
+  document.getElementById('runAll').disabled = true;
+  for (const a of AGENTS) await runAgent(a);
+  const toMemo = document.getElementById('toMemo');
+  toMemo.disabled = false;
+  toMemo.removeAttribute('aria-disabled');
+  document.getElementById('runAll').disabled = false;
+}
+
+document.getElementById('runAll').onclick = runAll;
+document.getElementById('reset').onclick = () => {
+  localStorage.removeItem('deallens:enrich');
+  renderAgents();
+  const toMemo = document.getElementById('toMemo');
+  toMemo.disabled = true;
+  toMemo.setAttribute('aria-disabled', 'true');
+};
+document.getElementById('toMemo').onclick = () => location.href = 'deal.html';
+
+(async function loadBuild() {
+  try {
+    const r = await fetch('./build.json', { cache:'no-store' });
+    const b = await r.json();
+    const el = document.getElementById('build-meta');
+    if (el) el.textContent = 'v' + b.version + ' · ' + b.commit;
+  } catch(e) {}
+})();
+
+renderAgents();
+renderRecord();
 </script>
 </body>
 </html>

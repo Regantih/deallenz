@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Settings · DealLens</title>
+<link rel="stylesheet" href="./styles/tokens.css"/>
+<style>
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--color-paper);color:var(--color-ink);font-family:var(--font-serif);line-height:var(--leading-normal)}
+.skip-link{position:absolute;left:-999px;width:1px;height:1px;overflow:hidden}
+.skip-link:focus{position:fixed;left:16px;top:16px;width:auto;height:auto;overflow:visible;padding:8px 16px;background:var(--color-ink);color:var(--color-paper);text-decoration:none;border-radius:var(--radius-sm);z-index:var(--z-modal)}
+.app-header{position:sticky;top:0;z-index:var(--z-sticky);background:var(--color-paper);border-bottom:1px solid var(--color-rule);height:var(--header-h);padding:0 var(--space-6);display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:var(--space-2);text-decoration:none;color:var(--color-ink);font-weight:700;font-family:var(--font-sans);font-size:var(--text-sm);letter-spacing:.02em}
+.brand-logo{width:20px;height:20px;background:var(--color-ink);border-radius:var(--radius-sm);position:relative;flex-shrink:0}
+.brand-logo::after{content:'';position:absolute;inset:4px;border:2px solid var(--color-paper);border-radius:2px}
+.app-nav{display:flex;gap:var(--space-5);align-items:center}
+.nav-link{color:var(--color-mute);text-decoration:none;font-family:var(--font-sans);font-size:var(--text-sm);padding:4px 0;border-bottom:2px solid transparent;transition:color .15s,border-color .15s}
+.nav-link:hover{color:var(--color-ink)}
+.nav-link.active{color:var(--color-ink);border-bottom-color:var(--color-ink);font-weight:600}
+.nav-link--stub{opacity:.45;cursor:not-allowed;pointer-events:none}
+.page-wrap{max-width:var(--container-md);margin:0 auto;padding:var(--space-7) var(--space-6)}
+.kicker{font-family:var(--font-mono);font-size:var(--text-xs);letter-spacing:.14em;text-transform:uppercase;color:var(--color-accent);margin:0 0 var(--space-2)}
+h1{font-size:var(--text-4xl);line-height:var(--leading-tight);margin:0 0 var(--space-4)}
+.lede{color:var(--color-mute);font-size:var(--text-lg);margin:0 0 var(--space-7)}
+.settings-card{background:var(--color-card);border:1px solid var(--color-rule);border-radius:var(--radius-md);padding:var(--space-5) var(--space-6);margin-bottom:var(--space-5)}
+.settings-card h2{margin:0 0 var(--space-2);font-size:var(--text-xl)}
+.settings-card p{margin:0;color:var(--color-mute);font-family:var(--font-sans);font-size:var(--text-sm)}
+.badge{display:inline-block;padding:3px 10px;border:1px solid var(--color-rule);border-radius:var(--radius-full);font-family:var(--font-mono);font-size:var(--text-xs);color:var(--color-mute);margin-left:var(--space-2);vertical-align:middle}
+.app-footer{border-top:1px solid var(--color-rule);padding:var(--space-5) var(--space-6);display:flex;justify-content:space-between;align-items:center;font-family:var(--font-sans);font-size:var(--text-xs);color:var(--color-mute)}
+.app-footer a{color:var(--color-mute);text-decoration:none}
+.app-footer a:hover{color:var(--color-ink);text-decoration:underline}
+@media(max-width:600px){.app-header{padding:0 var(--space-4)}.page-wrap{padding:var(--space-6) var(--space-4)}.app-footer{flex-direction:column;gap:var(--space-2);text-align:center}}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main-content">Skip to content</a>
+<header class="app-header" role="banner">
+  <a class="brand" href="./index.html" aria-label="DealLens home">
+    <span class="brand-logo" role="img" aria-hidden="true"></span>
+    <span>DealLens · Marketlogic Investors</span>
+  </a>
+  <nav class="app-nav" aria-label="Main navigation">
+    <a href="./deals.html" class="nav-link">Pipeline</a>
+    <a href="./submit.html" class="nav-link">Submit</a>
+    <a class="nav-link nav-link--stub active" aria-current="page" aria-disabled="true">Settings</a>
+  </nav>
+</header>
+<main class="page-wrap" id="main-content">
+  <p class="kicker">Configuration</p>
+  <h1>Settings.</h1>
+  <p class="lede">Agent configuration, API keys, and user preferences. Coming in a future release.</p>
+
+  <div class="settings-card">
+    <h2>LLM Provider <span class="badge">coming soon</span></h2>
+    <p>Configure which model powers intake parsing, memo drafting, and enrichment agents (Claude, OpenAI, or local heuristic).</p>
+  </div>
+
+  <div class="settings-card">
+    <h2>Cost &amp; Usage Limits <span class="badge">coming soon</span></h2>
+    <p>Set per-deal LLM spend caps and monthly budget guardrails. Owners bypass caps; external users are gated at configured thresholds.</p>
+  </div>
+
+  <div class="settings-card">
+    <h2>Data Room Integrations <span class="badge">coming soon</span></h2>
+    <p>Connect Google Drive and Dropbox to ingest data-room links automatically during deal intake.</p>
+  </div>
+
+  <div class="settings-card">
+    <h2>Notifications &amp; Alerts <span class="badge">coming soon</span></h2>
+    <p>Configure Slack or email alerts for deal status changes, enrichment completions, and IC memo readiness.</p>
+  </div>
+</main>
+<footer class="app-footer" role="contentinfo">
+  <span>© 2026 Marketlogic Investors LLC · Internal use only.</span>
+  <span id="build-meta" aria-label="App version"></span>
+</footer>
+<script>
+(async function(){
+  try{
+    const r=await fetch('./build.json',{cache:'no-store'});
+    const b=await r.json();
+    const el=document.getElementById('build-meta');
+    if(el)el.textContent='v'+b.version+' · '+b.commit;
+  }catch(e){}
+})();
+</script>
+</body>
+</html>
