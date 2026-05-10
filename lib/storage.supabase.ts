@@ -1,7 +1,7 @@
 /**
  * lib/storage.supabase.ts
  *
- * SupabaseStorageClient — real implementation of the StorageClient interface.
+ * SupabaseStorageClient — REAL implementation of StorageClient.
  *
  * Stores deal files in the 'deal-uploads' Supabase Storage bucket.
  * Path pattern:  deals/{deal_id}/{uuid}-{sanitised-filename}
@@ -9,54 +9,14 @@
  * This file is server-only. Do not import from Client Components.
  *
  * Required env vars (server-side):
- *   SUPABASE_URL         — Supabase project URL
- *   SUPABASE_SECRET_KEY  — Service-role key (bypasses RLS for trusted uploads)
- *
- * Interface note:
- *   The StorageClient interface and UploadedFile type are defined in
- *   lib/storage.ts (PR#3 / pr6/path-b-and-swarm).  Until that branch is
- *   merged, the types are redeclared inline below.  After merge, replace
- *   the inline declarations with:
- *
- *     import type { StorageClient, UploadedFile } from './storage';
- *
- *   and remove the inline declarations.
+ *   NEXT_PUBLIC_SUPABASE_URL  — Supabase project URL (also readable as SUPABASE_URL)
+ *   SUPABASE_SECRET_KEY       — Service-role key (bypasses RLS for trusted uploads)
  */
 
 import 'server-only';
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'node:crypto';
-
-// ---------------------------------------------------------------------------
-// Types (inline until PR#3 is merged — see note above)
-// ---------------------------------------------------------------------------
-
-export interface UploadedFile {
-  /** Storage key, e.g. "deals/{deal_id}/{uuid}-{name}" */
-  key: string;
-  /** Original file name supplied by the caller */
-  name: string;
-  size: number;
-  mime_type: string;
-  uploaded_at: string; // ISO-8601
-}
-
-export interface StorageClient {
-  putFile(
-    dealId: string,
-    data: Buffer | Uint8Array,
-    name: string,
-    mimeType: string
-  ): Promise<UploadedFile>;
-
-  getSignedUrl(key: string, expiresInSeconds?: number): Promise<string>;
-
-  listDealFiles(dealId: string): Promise<UploadedFile[]>;
-}
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
+import type { StorageClient, UploadedFile } from './storage';
 
 const BUCKET = 'deal-uploads';
 
@@ -73,22 +33,15 @@ export class SupabaseStorageClient implements StorageClient {
 
     if (!url || !key) {
       throw new Error(
-        '[deallenz] SupabaseStorageClient: SUPABASE_URL and SUPABASE_SECRET_KEY must be set.\n' +
-          'See ENV.md for setup instructions.'
+        '[deallenz] SupabaseStorageClient: NEXT_PUBLIC_SUPABASE_URL and ' +
+          'SUPABASE_SECRET_KEY must be set. See ENV.md for setup instructions.'
       );
     }
 
     this.client = createClient(url, key, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
+      auth: { autoRefreshToken: false, persistSession: false },
     });
   }
-
-  // -------------------------------------------------------------------------
-  // putFile
-  // -------------------------------------------------------------------------
 
   async putFile(
     dealId: string,
@@ -102,10 +55,7 @@ export class SupabaseStorageClient implements StorageClient {
 
     const { error } = await this.client.storage
       .from(BUCKET)
-      .upload(storagePath, data, {
-        contentType: mimeType,
-        upsert: false,
-      });
+      .upload(storagePath, data, { contentType: mimeType, upsert: false });
 
     if (error) {
       throw new Error(
@@ -121,10 +71,6 @@ export class SupabaseStorageClient implements StorageClient {
       uploaded_at: new Date().toISOString(),
     };
   }
-
-  // -------------------------------------------------------------------------
-  // getSignedUrl
-  // -------------------------------------------------------------------------
 
   async getSignedUrl(key: string, expiresInSeconds = 3600): Promise<string> {
     const { data, error } = await this.client.storage
@@ -142,10 +88,6 @@ export class SupabaseStorageClient implements StorageClient {
     return data.signedUrl;
   }
 
-  // -------------------------------------------------------------------------
-  // listDealFiles
-  // -------------------------------------------------------------------------
-
   async listDealFiles(dealId: string): Promise<UploadedFile[]> {
     const prefix = `deals/${dealId}/`;
     const { data, error } = await this.client.storage.from(BUCKET).list(prefix, {
@@ -160,10 +102,12 @@ export class SupabaseStorageClient implements StorageClient {
 
     if (!data || data.length === 0) return [];
 
-    return data.map((item) => ({
+    return data.map(item => ({
       key: `${prefix}${item.name}`,
-      // Strip the uuid- prefix to surface the original filename.
-      name: item.name.replace(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-/, ''),
+      name: item.name.replace(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-/,
+        ''
+      ),
       size: (item.metadata as { size?: number } | null)?.size ?? 0,
       mime_type:
         (item.metadata as { mimetype?: string } | null)?.mimetype ??
@@ -174,21 +118,9 @@ export class SupabaseStorageClient implements StorageClient {
 }
 
 // ---------------------------------------------------------------------------
-// Factory
+// Factory — no mock fallback; Supabase is always real
 // ---------------------------------------------------------------------------
 
-/**
- * createStorageClient()
- *
- * Returns the appropriate StorageClient for the current environment.
- *
- * - When USE_MOCKS=true (or NODE_ENV=development without USE_MOCKS set to
- *   'false'), you can swap this for a MockStorageClient from PR#3.
- * - In production (or when SUPABASE_SECRET_KEY is set), returns a real
- *   SupabaseStorageClient.
- *
- * Extend this function with the mock branch after PR#3 is merged.
- */
 export function createStorageClient(): StorageClient {
   return new SupabaseStorageClient();
 }
