@@ -4,128 +4,247 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Submit a deal · DealLens</title>
+<link rel="stylesheet" href="./styles/tokens.css"/>
 <style>
-:root{--ink:#1a1a1a;--paper:#f5f1e8;--rule:#d8d2c2;--accent:#8b6f3d;--mute:#6b6358;--card:#fbf8f0;--user:#1a1a1a;--bot:#fff}
-*{box-sizing:border-box}
-body{margin:0;background:var(--paper);color:var(--ink);font-family:Georgia,'Times New Roman',serif;line-height:1.55}
-header{padding:18px 32px;border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center}
-header a{color:var(--ink);text-decoration:none;font-weight:700}
-header nav a{margin-left:24px;font-weight:400;color:var(--mute)}
-.layout{display:grid;grid-template-columns:1fr 380px;gap:0;height:calc(100vh - 65px)}
-.chat{display:flex;flex-direction:column;border-right:1px solid var(--rule);background:var(--card)}
-.chathead{padding:24px 32px;border-bottom:1px solid var(--rule);background:var(--paper)}
-.chathead h1{margin:0 0 4px;font-size:32px;line-height:1.1}
-.chathead p{margin:0;color:var(--mute);font-size:14px}
-.msgs{flex:1;overflow-y:auto;padding:24px 32px;display:flex;flex-direction:column;gap:14px}
-.msg{max-width:78%;padding:12px 16px;border-radius:12px;font-size:15px;line-height:1.55;white-space:pre-wrap}
-.msg.bot{background:var(--bot);border:1px solid var(--rule);align-self:flex-start;border-bottom-left-radius:2px}
-.msg.user{background:var(--user);color:var(--paper);align-self:flex-end;border-bottom-right-radius:2px}
-.msg.sys{align-self:center;font-family:'Courier New',monospace;font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.12em;background:none;padding:4px 8px}
-.composer{border-top:1px solid var(--rule);padding:14px 20px;background:var(--paper);display:flex;gap:8px;align-items:flex-end}
-.composer textarea{flex:1;border:1px solid var(--rule);border-radius:8px;padding:10px 14px;font-family:inherit;font-size:15px;background:#fff;resize:none;min-height:44px;max-height:160px;line-height:1.5}
-.composer button{padding:10px 18px;border:1px solid var(--ink);background:var(--ink);color:var(--paper);border-radius:8px;font-weight:600;cursor:pointer;font-family:inherit}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--color-paper);color:var(--color-ink);font-family:var(--font-serif);line-height:var(--leading-normal)}
+
+.skip-link{position:absolute;left:-999px;width:1px;height:1px;overflow:hidden;z-index:var(--z-modal);background:var(--color-ink);color:var(--color-paper);padding:8px 16px;text-decoration:none;border-radius:var(--radius-sm);font-family:var(--font-sans)}
+.skip-link:focus{position:fixed;left:16px;top:16px;width:auto;height:auto;overflow:visible}
+
+.app-header{position:sticky;top:0;z-index:var(--z-sticky);background:var(--color-paper);border-bottom:1px solid var(--color-rule);height:var(--header-h);padding:0 var(--space-6);display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:var(--space-2);text-decoration:none;color:var(--color-ink);font-weight:700;font-family:var(--font-sans);font-size:var(--text-sm);letter-spacing:.02em}
+.brand-logo{width:20px;height:20px;background:var(--color-ink);border-radius:var(--radius-sm);position:relative;flex-shrink:0}
+.brand-logo::after{content:'';position:absolute;inset:4px;border:2px solid var(--color-paper);border-radius:2px}
+.app-nav{display:flex;gap:var(--space-5);align-items:center}
+.nav-link{color:var(--color-mute);text-decoration:none;font-family:var(--font-sans);font-size:var(--text-sm);padding:4px 0;border-bottom:2px solid transparent;transition:color .15s,border-color .15s}
+.nav-link:hover{color:var(--color-ink)}
+.nav-link.active{color:var(--color-ink);border-bottom-color:var(--color-ink);font-weight:600}
+.nav-link--stub{opacity:.45;cursor:not-allowed;pointer-events:none}
+
+.layout{display:grid;grid-template-columns:1fr 380px;gap:0;height:calc(100vh - var(--header-h))}
+
+/* Chat column */
+.chat{display:flex;flex-direction:column;border-right:1px solid var(--color-rule);background:var(--color-card)}
+.chathead{padding:var(--space-6) var(--space-6) var(--space-5);border-bottom:1px solid var(--color-rule);background:var(--color-paper)}
+.chathead h1{margin:0 0 4px;font-size:var(--text-3xl);line-height:var(--leading-tight)}
+.chathead p{margin:0;color:var(--color-mute);font-family:var(--font-sans);font-size:var(--text-sm)}
+.msgs{flex:1;overflow-y:auto;padding:var(--space-5) var(--space-6);display:flex;flex-direction:column;gap:var(--space-3)}
+.msg{max-width:78%;padding:12px 16px;border-radius:var(--radius-lg);font-family:var(--font-sans);font-size:var(--text-sm);line-height:var(--leading-snug);white-space:pre-wrap}
+.msg.bot{background:var(--color-white);border:1px solid var(--color-rule);align-self:flex-start;border-bottom-left-radius:var(--radius-sm)}
+.msg.user{background:var(--color-ink);color:var(--color-paper);align-self:flex-end;border-bottom-right-radius:var(--radius-sm)}
+.msg.sys{align-self:center;font-family:var(--font-mono);font-size:var(--text-xs);color:var(--color-mute);text-transform:uppercase;letter-spacing:.12em;background:none;padding:4px 8px;border-radius:0}
+.composer{border-top:1px solid var(--color-rule);padding:var(--space-3) var(--space-4);background:var(--color-paper);display:flex;gap:8px;align-items:flex-end}
+.composer textarea{flex:1;border:1px solid var(--color-rule);border-radius:var(--radius-md);padding:10px 14px;font-family:var(--font-sans);font-size:var(--text-sm);background:var(--color-white);resize:none;min-height:44px;max-height:160px;line-height:var(--leading-snug)}
+.composer textarea:focus{outline:2px solid var(--color-accent);border-color:transparent}
+.composer button{padding:10px 18px;border:1px solid var(--color-ink);background:var(--color-ink);color:var(--color-paper);border-radius:var(--radius-md);font-weight:600;cursor:pointer;font-family:var(--font-sans);font-size:var(--text-sm)}
+.composer button:hover{background:#333}
 .composer button:disabled{opacity:.4;cursor:not-allowed}
-.side{padding:24px 28px;overflow-y:auto;background:var(--paper)}
-.side h2{margin:0 0 4px;font-size:14px;font-family:'Courier New',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
-.side .lede{margin:0 0 18px;font-size:13px;color:var(--mute)}
-.field{border-bottom:1px dashed var(--rule);padding:8px 0;font-size:13px;display:grid;grid-template-columns:90px 1fr;gap:8px}
-.field b{font-family:'Courier New',monospace;font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.1em;padding-top:2px}
-.field span{color:var(--ink);word-break:break-word}
-.field span.empty{color:var(--rule);font-style:italic}
-.cfg{margin-top:18px;border-top:1px solid var(--rule);padding-top:16px}
-.cfg label{display:block;font-size:12px;font-family:'Courier New',monospace;color:var(--mute);text-transform:uppercase;letter-spacing:.1em;margin:10px 0 4px}
-.cfg input,.cfg select{width:100%;padding:8px 10px;border:1px solid var(--rule);border-radius:4px;font-family:inherit;font-size:13px;background:#fff}
-.cfg .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.actions{margin-top:18px;display:flex;gap:8px;flex-direction:column}
-.actions button{padding:10px 14px;border:1px solid var(--ink);background:transparent;color:var(--ink);border-radius:6px;font-weight:600;cursor:pointer;font-family:inherit;font-size:13px}
-.actions button.primary{background:var(--ink);color:var(--paper)}
-.dots{display:inline-block}
-.dots span{display:inline-block;width:6px;height:6px;background:var(--mute);border-radius:50%;margin:0 2px;animation:b 1.2s infinite}
+
+/* Record sidebar */
+.side{padding:var(--space-5) var(--space-5);overflow-y:auto;background:var(--color-paper)}
+.side-heading{margin:0 0 4px;font-family:var(--font-mono);font-size:var(--text-xs);letter-spacing:.14em;text-transform:uppercase;color:var(--color-accent)}
+.side-lede{margin:0 0 var(--space-5);font-family:var(--font-sans);font-size:var(--text-xs);color:var(--color-mute)}
+.field-row{border-bottom:1px dashed var(--color-rule);padding:8px 0;font-family:var(--font-sans);font-size:var(--text-xs);display:grid;grid-template-columns:90px 1fr;gap:8px;align-items:baseline}
+.field-key{font-family:var(--font-mono);font-size:10px;color:var(--color-mute);text-transform:uppercase;letter-spacing:.1em;padding-top:2px}
+.field-val{color:var(--color-ink);word-break:break-word}
+.field-val.empty{color:var(--color-rule);font-style:italic}
+
+.cfg{margin-top:var(--space-5);border-top:1px solid var(--color-rule);padding-top:var(--space-4)}
+.cfg label{display:block;font-family:var(--font-mono);font-size:10px;color:var(--color-mute);text-transform:uppercase;letter-spacing:.1em;margin:var(--space-3) 0 4px}
+.cfg select,.cfg input{width:100%;padding:8px 10px;border:1px solid var(--color-rule);border-radius:var(--radius-sm);font-family:var(--font-sans);font-size:var(--text-sm);background:var(--color-white)}
+.cfg select:focus,.cfg input:focus{outline:2px solid var(--color-accent);border-color:transparent}
+
+.actions{margin-top:var(--space-5);display:flex;gap:8px;flex-direction:column}
+.actions button{padding:10px 14px;border:1px solid var(--color-ink);background:transparent;color:var(--color-ink);border-radius:var(--radius-md);font-weight:600;cursor:pointer;font-family:var(--font-sans);font-size:var(--text-sm)}
+.actions button:hover{background:var(--color-card)}
+.actions button.primary{background:var(--color-ink);color:var(--color-paper)}
+.actions button.primary:hover{background:#333}
+
+.dots span{display:inline-block;width:5px;height:5px;background:var(--color-mute);border-radius:50%;margin:0 2px;animation:b 1.2s infinite}
 .dots span:nth-child(2){animation-delay:.2s}.dots span:nth-child(3){animation-delay:.4s}
 @keyframes b{0%,80%,100%{opacity:.2}40%{opacity:1}}
-@media (max-width:880px){.layout{grid-template-columns:1fr;height:auto}.side{border-top:1px solid var(--rule)}}
+
+.app-footer{border-top:1px solid var(--color-rule);padding:var(--space-4) var(--space-6);display:flex;justify-content:space-between;align-items:center;font-family:var(--font-sans);font-size:var(--text-xs);color:var(--color-mute)}
+.app-footer a{color:var(--color-mute);text-decoration:none}
+.app-footer a:hover{color:var(--color-ink);text-decoration:underline}
+
+@media(max-width:880px){.layout{grid-template-columns:1fr;height:auto}.side{border-top:1px solid var(--color-rule)}}
+@media(max-width:600px){.app-header{padding:0 var(--space-4)}.chathead{padding:var(--space-4)}.app-footer{flex-direction:column;gap:var(--space-2);text-align:center}}
 </style>
 </head>
 <body>
-<header><a href="./">DealLens · Marketlogic Investors</a><nav><a href="./">Memo</a><a href="./deals.html">Pipeline</a><a href="./submit.html">Submit</a></nav></header>
-<div class="layout">
-  <section class="chat">
-    <div class="chathead"><h1>Tell me about the deal.</h1><p>Talk to the intake agent in plain English. It listens, asks follow-ups, and structures everything into a deal record. The four enrichment agents (ingest · research · team · unit-econ) take it from there.</p></div>
-    <div class="msgs" id="msgs"></div>
-    <div class="composer"><textarea id="inp" placeholder="e.g. We're looking at PQC Bank, a seed-stage fintech in Austin. They sell post-quantum crypto to community banks..." rows="1"></textarea><button id="send">Send</button></div>
-  </section>
-  <aside class="side">
-    <h2>Live deal record</h2>
-    <p class="lede">Updated as the agent extracts fields from the conversation.</p>
-    <div id="fields"></div>
-    <div class="cfg">
-      <h2 style="margin-bottom:8px">Agent settings</h2>
-      <label>Provider</label>
-      <select id="provider"><option value="anthropic">Anthropic (Claude)</option><option value="openai">OpenAI</option><option value="local">Local (heuristic, no key)</option></select>
-      <label>Model</label>
-      <input id="model" value="claude-3-5-sonnet-latest"/>
-      <label>API key (stored locally only)</label>
-      <input id="key" type="password" placeholder="sk-..."/>
+<a class="skip-link" href="#chat-input">Skip to chat</a>
+
+<header class="app-header" role="banner">
+  <a class="brand" href="./index.html" aria-label="DealLens home">
+    <span class="brand-logo" role="img" aria-hidden="true"></span>
+    <span>DealLens · Marketlogic Investors</span>
+  </a>
+  <nav class="app-nav" aria-label="Main navigation">
+    <a href="./deals.html" class="nav-link">Pipeline</a>
+    <a href="./submit.html" class="nav-link active" aria-current="page">Submit</a>
+    <a class="nav-link nav-link--stub" aria-disabled="true" tabindex="-1">Settings</a>
+  </nav>
+</header>
+
+<div class="layout" role="main">
+  <section class="chat" aria-label="Deal intake chat">
+    <div class="chathead">
+      <h1>Tell me about the deal.</h1>
+      <p>Talk to the intake agent in plain English. It listens, asks follow-ups, and structures everything into a deal record. The four enrichment agents (ingest · research · team · unit-econ) take it from there.</p>
     </div>
+    <div class="msgs" id="msgs" role="log" aria-live="polite" aria-label="Conversation"></div>
+    <div class="composer">
+      <label for="chat-input" class="skip-link">Message the intake agent</label>
+      <textarea id="chat-input" placeholder="e.g. We’re looking at PQC Bank, a seed-stage fintech in Austin. They sell post-quantum crypto to community banks…" rows="1"></textarea>
+      <button id="send" aria-label="Send message">Send</button>
+    </div>
+  </section>
+
+  <aside class="side" aria-label="Live deal record">
+    <h2 class="side-heading">Live deal record</h2>
+    <p class="side-lede">Updated as the agent extracts fields from the conversation.</p>
+    <div id="fields" role="list"></div>
+
+    <div class="cfg" aria-label="Agent settings">
+      <h2 class="side-heading" style="margin-bottom:var(--space-3)">Agent settings</h2>
+      <label for="provider">Provider</label>
+      <select id="provider">
+        <option value="anthropic">Anthropic (Claude)</option>
+        <option value="openai">OpenAI</option>
+        <option value="local">Local (heuristic, no key)</option>
+      </select>
+      <label for="model-select">Model</label>
+      <input id="model-select" value="claude-3-5-sonnet-latest" aria-label="Model name"/>
+      <label for="api-key">API key (stored locally only)</label>
+      <input id="api-key" type="password" placeholder="sk-…" aria-label="API key"/>
+    </div>
+
     <div class="actions">
-      <button class="primary" id="finish">Finalize deal record</button>
+      <button class="primary" id="finish">Finalise deal record</button>
       <button id="download">Download JSON</button>
       <button id="reset">Reset conversation</button>
     </div>
   </aside>
 </div>
+
+<footer class="app-footer" role="contentinfo">
+  <span>© 2026 Marketlogic Investors LLC · Internal use only.</span>
+  <span id="build-meta" aria-label="App version"></span>
+</footer>
+
 <script>
-const FIELDS=[['name','Company'],['stage','Stage'],['sector','Sector'],['hq','HQ'],['url','Website'],['thesis','Thesis'],['ask','Ask'],['premoney','Pre-money'],['lead','Lead'],['icp','ICP'],['jtbd','JTBD'],['wtp','WTP'],['founders','Founders'],['deck','Deck'],['dataroom','Dataroom'],['model','Model'],['arr','ARR'],['mom','MoM %'],['logos','Logos'],['nrr','NRR %']];
-const SYS=`You are the DealLens intake agent for Marketlogic Investors LLC. Your only job: have a natural conversation with a VC analyst about a deal, and quietly extract a structured record. After EVERY user message, reply with two parts joined by a literal line containing only ---JSON---:\n1) A short, conversational reply (≤2 sentences) that asks ONE follow-up question targeting the most important missing field.\n2) A JSON object with any fields you can confidently extract so far. Use these keys (omit unknowns): name, stage (pre-seed|seed|series-a|series-b|growth), sector, hq, url, thesis, ask (USD number), premoney (USD number), lead, icp, jtbd, wtp, founders (array of names or LinkedIn URLs), deck, dataroom, model, arr (USD number), mom (number, %), logos (number), nrr (number, %).\nNever invent data. Ask in this order of priority: name → stage/sector → thesis → ICP/JTBD → traction → team → round → docs.`;
-const state={msgs:[],record:{}};
-const $=id=>document.getElementById(id);
-function renderMsgs(){const c=$('msgs');c.innerHTML='';for(const m of state.msgs){const d=document.createElement('div');d.className='msg '+m.role;d.textContent=m.content;c.appendChild(d);}c.scrollTop=c.scrollHeight;}
-function renderFields(){const c=$('fields');c.innerHTML='';for(const [k,label] of FIELDS){const v=state.record[k];const row=document.createElement('div');row.className='field';const val=v==null||v===''||(Array.isArray(v)&&!v.length)?'<span class="empty">—</span>':'<span>'+(Array.isArray(v)?v.join(', '):String(v))+'</span>';row.innerHTML='<b>'+label+'</b>'+val;c.appendChild(row);}}
-function parseReply(text){const idx=text.indexOf('---JSON---');if(idx<0)return{reply:text,patch:{}};const reply=text.slice(0,idx).trim();const json=text.slice(idx+10).trim().replace(/^```json|^```|```$/g,'').trim();let patch={};try{patch=JSON.parse(json);}catch(e){}return{reply,patch};}
-async function callLLM(history){const provider=$('provider').value;const model=$('model').value.trim();const key=$('key').value.trim();if(provider==='local'||!key){return localExtract(history);}const messages=history.map(m=>({role:m.role==='user'?'user':'assistant',content:m.content}));try{if(provider==='anthropic'){const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model,max_tokens:1024,system:SYS,messages})});const d=await r.json();return d.content?.[0]?.text||JSON.stringify(d);}else{const r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'content-type':'application/json','authorization':'Bearer '+key},body:JSON.stringify({model,messages:[{role:'system',content:SYS},...messages]})});const d=await r.json();return d.choices?.[0]?.message?.content||JSON.stringify(d);}}catch(e){return'(agent error: '+e.message+')\n---JSON---\n{}';}}
-function localExtract(history){
-  const all=history.filter(m=>m.role==='user').map(m=>m.content).join(' ');
-  const patch={};
-  // Company name — look for explicit "called X", "company is X", or capitalized proper noun before "is"
-  const mName=all.match(/(?:company(?:\s+(?:is|called|named))?|it'?s?\s+called|called|named)\s+([A-Z][A-Za-z0-9\s&.-]{1,40}?)(?:\s*[,.]|\s+(?:is\s|are\s|a\s|an\s|the\s))/);
-  if(mName)patch.name=mName[1].trim();
-  // Stage
-  const mStage=all.match(/\b(pre-?seed|seed|series[- ][abAB]|growth)\b/i);
-  if(mStage)patch.stage=mStage[1].toLowerCase().replace(/\s/,'-');
-  // Sector
-  const SECTORS=['fintech','vertical saas','saas','healthtech','health tech','biotech','edtech','proptech','legaltech','climate tech','cleantech','cybersecurity','data infrastructure','enterprise software','consumer','marketplace','logistics','insurtech'];
-  for(const s of SECTORS){if(new RegExp('\\b'+s.replace(/ /g,'[\\s-]')+'\\b','i').test(all)){patch.sector=s;break;}}
-  // HQ / Location
-  const mHQ=all.match(/(?:based\s+in|headquartered\s+in|hq(?:ed)?\s+in|located\s+in|out\s+of|offices?\s+in)\s+([A-Z][A-Za-z\s,]{2,40}?)(?:\s*[,.]|$)/i);
-  if(mHQ)patch.hq=mHQ[1].trim().replace(/\s+/,' ');
-  // Thesis / value prop
-  const mThesis=all.match(/(?:thesis|opportunity|the\s+bet\s+is|the\s+idea\s+is|they\s+(?:help|solve|enable|provide)|value\s+prop)[:\s]+(.{20,200}?)(?:\.\s|$)/i);
-  if(mThesis)patch.thesis=mThesis[1].trim();
-  // Ask / raise amount
-  const mAsk=all.match(/(?:rais(?:ing|ed?)|ask(?:ing)?|round(?:\s+(?:size|is))?)\s+\$?\s*(\d+(?:\.\d+)?)\s*(k|m|million|thousand)?(?!\s*arr)/i);
-  if(mAsk){let n=parseFloat(mAsk[1]);if(/m|million/i.test(mAsk[2]||''))n*=1e6;else if(/k|thousand/i.test(mAsk[2]||''))n*=1e3;patch.ask=n;}
-  // Pre-money valuation (handles both "pre-money $15M" and "$15M pre-money")
-  const mPre=all.match(/(?:(?:pre[- ]?money|pre[- ]?val(?:uation)?|valued\s+at)\s+\$?\s*(\d+(?:\.\d+)?)\s*(k|m|million|thousand)?|\$?\s*(\d+(?:\.\d+)?)\s*(k|m|million|thousand)?\s+pre[- ]?(?:money|val))/i);
-  if(mPre){const raw=mPre[1]||mPre[3];const unit=mPre[2]||mPre[4]||'';let n=parseFloat(raw);if(/m|million/i.test(unit))n*=1e6;else if(/k|thousand/i.test(unit))n*=1e3;patch.premoney=n;}
-  // ARR
-  const mARR=all.match(/\$?\s*(\d+(?:\.\d+)?)\s*(k|m|million|thousand)?\s*(?:arr|in\s+arr|annual\s+(?:recurring\s+)?revenue)/i);
-  if(mARR){let n=parseFloat(mARR[1]);if(/m|million/i.test(mARR[2]||''))n*=1e6;else if(/k|thousand/i.test(mARR[2]||''))n*=1e3;patch.arr=n;}
-  // MoM growth
-  const mMoM=all.match(/(\d+(?:\.\d+)?)\s*%\s*(?:mom|month[- ]?over[- ]?month|monthly\s+growth|m\/m)/i);
-  if(mMoM)patch.mom=parseFloat(mMoM[1]);
-  // Logos / paying customers
-  const mLogos=all.match(/(\d+)\s*(?:logos?|paying\s+customers?|enterprise\s+customers?|clients?)/i);
-  if(mLogos)patch.logos=+mLogos[1];
-  // NRR (handles "118% NRR" and "NRR is 118%")
-  const mNRR=all.match(/(?:nrr\s+(?:is\s+|of\s+)?(\d+(?:\.\d+)?)\s*%|(\d+(?:\.\d+)?)\s*%\s*nrr)/i);
-  if(mNRR)patch.nrr=parseFloat(mNRR[1]||mNRR[2]);
-  // Use of funds
-  const mUse=all.match(/(?:use\s+of\s+funds?|spending\s+(?:it\s+)?on|going\s+towards?|capital\s+(?:for|towards?))[:\s]+(.{10,200}?)(?:\.\s|$)/i);
-  if(mUse)patch.use_of_funds=mUse[1].trim();
-  // Website
-  const mURL=all.match(/(?:website|site|url|domain)\s*[:\s]+\s*((?:https?:\/\/)?(?:www\.)?[a-z0-9][a-z0-9-]{1,60}\.[a-z]{2,}(?:\/[^\s]*)?)/i);
-  if(mURL)patch.url='https://'+mURL[1].replace(/^https?:\/\//,'');
-  const questions=[
+'use strict';
+const FIELDS = [
+  ['name','Company'],['stage','Stage'],['sector','Sector'],['hq','HQ'],['url','Website'],
+  ['thesis','Thesis'],['ask','Ask'],['premoney','Pre-money'],['lead','Lead'],
+  ['icp','ICP'],['jtbd','JTBD'],['wtp','WTP'],['founders','Founders'],
+  ['deck','Deck'],['dataroom','Dataroom'],['model','Model'],
+  ['arr','ARR'],['mom','MoM %'],['logos','Logos'],['nrr','NRR %']
+];
+
+const SYS = `You are the DealLens intake agent for Marketlogic Investors LLC. Your only job: have a natural conversation with a VC analyst about a deal, and quietly extract a structured record. After EVERY user message, reply with two parts joined by a literal line containing only ---JSON---:\n1) A short, conversational reply (≤2 sentences) that asks ONE follow-up question targeting the most important missing field.\n2) A JSON object with any fields you can confidently extract so far. Use these keys (omit unknowns): name, stage (pre-seed|seed|series-a|series-b|growth), sector, hq, url, thesis, ask (USD number), premoney (USD number), lead, icp, jtbd, wtp, founders (array of names or LinkedIn URLs), deck, dataroom, model, arr (USD number), mom (number, %), logos (number), nrr (number, %).\nNever invent data. Ask in this order of priority: name → stage/sector → thesis → ICP/JTBD → traction → team → round → docs.`;
+
+const state = { msgs: [], record: {} };
+
+function renderMsgs() {
+  const c = document.getElementById('msgs');
+  c.innerHTML = '';
+  for (const m of state.msgs) {
+    const d = document.createElement('div');
+    d.className = 'msg ' + m.role;
+    d.textContent = m.content;
+    if (m.role === 'bot') d.setAttribute('aria-label', 'Agent: ' + m.content.slice(0,80));
+    c.appendChild(d);
+  }
+  c.scrollTop = c.scrollHeight;
+}
+
+function renderFields() {
+  const c = document.getElementById('fields');
+  c.innerHTML = '';
+  for (const [k, label] of FIELDS) {
+    const v = state.record[k];
+    const row = document.createElement('div');
+    row.className = 'field-row';
+    row.setAttribute('role', 'listitem');
+    const isEmpty = v == null || v === '' || (Array.isArray(v) && !v.length);
+    row.innerHTML = `<span class="field-key">${label}</span>` +
+      (isEmpty
+        ? `<span class="field-val empty" aria-label="${label}: not yet captured">—</span>`
+        : `<span class="field-val">${Array.isArray(v) ? v.join(', ') : String(v)}</span>`);
+    c.appendChild(row);
+  }
+}
+
+function parseReply(text) {
+  const idx = text.indexOf('---JSON---');
+  if (idx < 0) return { reply: text, patch: {} };
+  const reply = text.slice(0, idx).trim();
+  const raw = text.slice(idx + 10).trim().replace(/^```json|^```|```$/g, '').trim();
+  let patch = {};
+  try { patch = JSON.parse(raw); } catch(e) {}
+  return { reply, patch };
+}
+
+async function callLLM(history) {
+  const provider = document.getElementById('provider').value;
+  const model    = document.getElementById('model-select').value.trim();
+  const key      = document.getElementById('api-key').value.trim();
+  if (provider === 'local' || !key) return localExtract(history);
+  const messages = history.map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.content }));
+  try {
+    if (provider === 'anthropic') {
+      const r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true' },
+        body: JSON.stringify({ model, max_tokens:1024, system:SYS, messages })
+      });
+      const d = await r.json();
+      return d.content?.[0]?.text || JSON.stringify(d);
+    } else {
+      const r = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'content-type':'application/json','authorization':'Bearer '+key },
+        body: JSON.stringify({ model, messages:[{role:'system',content:SYS},...messages] })
+      });
+      const d = await r.json();
+      return d.choices?.[0]?.message?.content || JSON.stringify(d);
+    }
+  } catch(e) {
+    return '(agent error: ' + e.message + ')\n---JSON---\n{}';
+  }
+}
+
+function localExtract(history) {
+  const all = history.filter(m => m.role === 'user').map(m => m.content).join(' ');
+  const patch = {};
+  const mName = all.match(/(?:company(?:\s+(?:is|called|named))?|it'?s?\s+called|called|named)\s+([A-Z][A-Za-z0-9\s&.-]{1,40}?)(?:\s*[,.]|\s+(?:is\s|are\s|a\s|an\s|the\s))/);
+  if (mName) patch.name = mName[1].trim();
+  const mStage = all.match(/\b(pre-?seed|seed|series[- ][abAB]|growth)\b/i);
+  if (mStage) patch.stage = mStage[1].toLowerCase().replace(/\s/, '-');
+  const SECTORS = ['fintech','vertical saas','saas','healthtech','health tech','biotech','edtech','proptech','legaltech','climate tech','cleantech','cybersecurity','data infrastructure','enterprise software','consumer','marketplace','logistics','insurtech'];
+  for (const s of SECTORS) { if (new RegExp('\\b' + s.replace(/ /g,'[\\s-]') + '\\b','i').test(all)) { patch.sector = s; break; } }
+  const mHQ = all.match(/(?:based\s+in|headquartered\s+in|hq(?:ed)?\s+in|located\s+in|out\s+of|offices?\s+in)\s+([A-Z][A-Za-z\s,]{2,40}?)(?:\s*[,.]|$)/i);
+  if (mHQ) patch.hq = mHQ[1].trim().replace(/\s+/,' ');
+  const mThesis = all.match(/(?:thesis|opportunity|the\s+bet\s+is|the\s+idea\s+is|they\s+(?:help|solve|enable|provide)|value\s+prop)[:\s]+(.{20,200}?)(?:\.\s|$)/i);
+  if (mThesis) patch.thesis = mThesis[1].trim();
+  const mAsk = all.match(/(?:rais(?:ing|ed?)|ask(?:ing)?|round(?:\s+(?:size|is))?)\s+\$?\s*(\d+(?:\.\d+)?)\s*(k|m|million|thousand)?(?!\s*arr)/i);
+  if (mAsk) { let n = parseFloat(mAsk[1]); if (/m|million/i.test(mAsk[2]||'')) n*=1e6; else if (/k|thousand/i.test(mAsk[2]||'')) n*=1e3; patch.ask = n; }
+  const mPre = all.match(/(?:(?:pre[- ]?money|pre[- ]?val(?:uation)?|valued\s+at)\s+\$?\s*(\d+(?:\.\d+)?)\s*(k|m|million|thousand)?|\$?\s*(\d+(?:\.\d+)?)\s*(k|m|million|thousand)?\s+pre[- ]?(?:money|val))/i);
+  if (mPre) { const raw=mPre[1]||mPre[3];const unit=mPre[2]||mPre[4]||'';let n=parseFloat(raw);if(/m|million/i.test(unit))n*=1e6;else if(/k|thousand/i.test(unit))n*=1e3;patch.premoney=n; }
+  const mARR = all.match(/\$?\s*(\d+(?:\.\d+)?)\s*(k|m|million|thousand)?\s*(?:arr|in\s+arr|annual\s+(?:recurring\s+)?revenue)/i);
+  if (mARR) { let n=parseFloat(mARR[1]);if(/m|million/i.test(mARR[2]||''))n*=1e6;else if(/k|thousand/i.test(mARR[2]||''))n*=1e3;patch.arr=n; }
+  const mMoM = all.match(/(\d+(?:\.\d+)?)\s*%\s*(?:mom|month[- ]?over[- ]?month|monthly\s+growth|m\/m)/i);
+  if (mMoM) patch.mom = parseFloat(mMoM[1]);
+  const mLogos = all.match(/(\d+)\s*(?:logos?|paying\s+customers?|enterprise\s+customers?|clients?)/i);
+  if (mLogos) patch.logos = +mLogos[1];
+  const mNRR = all.match(/(?:nrr\s+(?:is\s+|of\s+)?(\d+(?:\.\d+)?)\s*%|(\d+(?:\.\d+)?)\s*%\s*nrr)/i);
+  if (mNRR) patch.nrr = parseFloat(mNRR[1] || mNRR[2]);
+  const mURL = all.match(/(?:website|site|url|domain)\s*[:\s]+\s*((?:https?:\/\/)?(?:www\.)?[a-z0-9][a-z0-9-]{1,60}\.[a-z]{2,}(?:\/[^\s]*)?)/i);
+  if (mURL) patch.url = 'https://' + mURL[1].replace(/^https?:\/\//, '');
+  const questions = [
     'What\u2019s the company name and what do they do?',
     'What stage and sector are they in?',
     'One-line thesis \u2014 why this, why now?',
@@ -135,18 +254,73 @@ function localExtract(history){
     'Round size and pre-money valuation?',
     'Deck or data-room link?'
   ];
-  const i=Math.min(Math.floor(history.filter(m=>m.role==='user').length-1),questions.length-1);
-  return questions[Math.max(0,i)]+'\n---JSON---\n'+JSON.stringify(patch);
+  const i = Math.min(Math.floor(history.filter(m => m.role === 'user').length - 1), questions.length - 1);
+  return questions[Math.max(0, i)] + '\n---JSON---\n' + JSON.stringify(patch);
 }
-async function send(){const inp=$('inp');const txt=inp.value.trim();if(!txt)return;state.msgs.push({role:'user',content:txt});inp.value='';renderMsgs();$('send').disabled=true;const thinking={role:'bot',content:'…'};state.msgs.push(thinking);renderMsgs();const out=await callLLM(state.msgs.filter(m=>m.role!=='sys'&&m!==thinking));const{reply,patch}=parseReply(out);state.msgs.pop();state.msgs.push({role:'bot',content:reply||'(no reply)'});Object.assign(state.record,Object.fromEntries(Object.entries(patch).filter(([,v])=>v!=null&&v!=='')));renderMsgs();renderFields();$('send').disabled=false;inp.focus();}
-function finalize(){const r={...state.record};r.id=(r.name||'deal').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');r.submitted_at=new Date().toISOString();r.status='intake';r.transcript=state.msgs.filter(m=>m.role!=='sys');state.msgs.push({role:'sys',content:'Deal record finalized — '+r.id});renderMsgs();const blob=new Blob([JSON.stringify(r,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='deals/'+r.id+'.json';a.click();}
-$('send').addEventListener('click',send);
-$('inp').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}});
-$('finish').addEventListener('click',finalize);
-$('download').addEventListener('click',finalize);
-$('reset').addEventListener('click',()=>{state.msgs=[];state.record={};boot();});
-$('provider').addEventListener('change',()=>{const p=$('provider').value;$('model').value=p==='anthropic'?'claude-3-5-sonnet-latest':p==='openai'?'gpt-4o-mini':'—';});
-function boot(){state.msgs.push({role:'bot',content:"Hi — I'm the DealLens intake agent. Tell me about the deal in your own words. I'll ask follow-ups and quietly fill in the structured record on the right. To start: what's the company name and what do they do?"});renderMsgs();renderFields();}
+
+async function send() {
+  const inp = document.getElementById('chat-input');
+  const txt = inp.value.trim();
+  if (!txt) return;
+  state.msgs.push({ role:'user', content:txt });
+  inp.value = '';
+  renderMsgs();
+  document.getElementById('send').disabled = true;
+  const thinking = { role:'bot', content:'\u2026' };
+  state.msgs.push(thinking);
+  renderMsgs();
+  const out = await callLLM(state.msgs.filter(m => m !== thinking));
+  const { reply, patch } = parseReply(out);
+  state.msgs.pop();
+  state.msgs.push({ role:'bot', content: reply || '(no reply)' });
+  Object.assign(state.record, Object.fromEntries(Object.entries(patch).filter(([,v]) => v != null && v !== '')));
+  renderMsgs();
+  renderFields();
+  document.getElementById('send').disabled = false;
+  inp.focus();
+}
+
+function finalize() {
+  const r = { ...state.record };
+  r.id = (r.name || 'deal').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+  r.submitted_at = new Date().toISOString();
+  r.status = 'intake';
+  r.transcript = state.msgs.filter(m => m.role !== 'sys');
+  state.msgs.push({ role:'sys', content:'Deal record finalised — ' + r.id });
+  renderMsgs();
+  const blob = new Blob([JSON.stringify(r, null, 2)], { type:'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'deals/' + r.id + '.json';
+  a.click();
+}
+
+document.getElementById('send').addEventListener('click', send);
+document.getElementById('chat-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+});
+document.getElementById('finish').addEventListener('click', finalize);
+document.getElementById('download').addEventListener('click', finalize);
+document.getElementById('reset').addEventListener('click', () => { state.msgs = []; state.record = {}; boot(); });
+document.getElementById('provider').addEventListener('change', () => {
+  const p = document.getElementById('provider').value;
+  document.getElementById('model-select').value = p === 'anthropic' ? 'claude-3-5-sonnet-latest' : p === 'openai' ? 'gpt-4o-mini' : '—';
+});
+
+(async function loadBuild() {
+  try {
+    const r = await fetch('./build.json', { cache:'no-store' });
+    const b = await r.json();
+    const el = document.getElementById('build-meta');
+    if (el) el.textContent = 'v' + b.version + ' · ' + b.commit;
+  } catch(e) {}
+})();
+
+function boot() {
+  state.msgs.push({ role:'bot', content: "Hi \u2014 I\u2019m the DealLens intake agent. Tell me about the deal in your own words. I\u2019ll ask follow-ups and quietly fill in the structured record on the right. To start: what\u2019s the company name and what do they do?" });
+  renderMsgs();
+  renderFields();
+}
 boot();
 </script>
 </body>
