@@ -2,23 +2,17 @@
  * lib/supabase/types.ts
  *
  * Hand-authored Database type definitions for DealLens.
- * Matches the schema defined in supabase/migrations/.
+ * Matches the schema in supabase/migrations/.
+ *
+ * IMPORTANT: Every table must include `Relationships: []` (even if no
+ * FK relationships are tracked here). @supabase/postgrest-js requires
+ * GenericTable = { Row, Insert, Update, Relationships: GenericRelationship[] }
+ * and without this field `Database['public']` does not extend GenericSchema,
+ * causing SupabaseClient<Database>.from().insert() to resolve to `never[]`.
  *
  * Replace with generated types once the schema stabilises:
- *
- *   npx supabase gen types typescript \
- *     --project-id <your-project-ref> \
- *     --schema public \
+ *   npx supabase gen types typescript --project-id <ref> --schema public \\
  *     > lib/supabase/types.ts
- *
- * Tables:
- *   profiles        — one row per authenticated user
- *   deals           — deal records owned by a profile
- *   deal_files      — uploaded / ingested files per deal
- *   deal_runs       — agent-swarm execution records
- *   cost_ledger     — granular LLM call costs per run
- *   usage_counters  — monthly usage per user (guardrails)
- *   jobs            — ingest job queue (PR7)
  */
 
 export type Json =
@@ -57,6 +51,7 @@ export interface Database {
           is_owner?: boolean;
           created_at?: string;
         };
+        Relationships: [];
       };
 
       // ------------------------------------------------------------------
@@ -90,6 +85,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
 
       // ------------------------------------------------------------------
@@ -123,6 +119,7 @@ export interface Database {
           source?: 'upload' | 'link_ingest';
           created_at?: string;
         };
+        Relationships: [];
       };
 
       // ------------------------------------------------------------------
@@ -159,6 +156,7 @@ export interface Database {
           total_tokens_in?: number | null;
           total_tokens_out?: number | null;
         };
+        Relationships: [];
       };
 
       // ------------------------------------------------------------------
@@ -198,6 +196,7 @@ export interface Database {
           duration_ms?: number | null;
           created_at?: string;
         };
+        Relationships: [];
       };
 
       // ------------------------------------------------------------------
@@ -222,6 +221,7 @@ export interface Database {
           deals_processed?: number;
           usd_spent?: number;
         };
+        Relationships: [];
       };
 
       // ------------------------------------------------------------------
@@ -229,10 +229,10 @@ export interface Database {
       // ------------------------------------------------------------------
       jobs: {
         Row: {
-          id: string;           // uuid
+          id: string;
           deal_id: string;
-          kind: string;         // 'ingest_link'
-          status: string;       // 'queued' | 'running' | 'done' | 'failed'
+          kind: string;
+          status: string;
           payload: Json;
           error: string | null;
           started_at: string | null;
@@ -261,6 +261,7 @@ export interface Database {
           finished_at?: string | null;
           created_at?: string;
         };
+        Relationships: [];
       };
     };
     Views: Record<string, never>;

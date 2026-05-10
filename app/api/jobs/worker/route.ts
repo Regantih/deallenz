@@ -8,8 +8,7 @@
  * manually via curl.
  *
  * Security: requires Authorization: Bearer <WORKER_SECRET> header.
- * Set WORKER_SECRET in Vercel env vars. If absent, falls back to
- * SUPABASE_SECRET_KEY (not recommended — set a dedicated WORKER_SECRET).
+ * Set WORKER_SECRET in Vercel env vars.
  *
  * Status transitions:
  *   queued → running → done
@@ -36,7 +35,7 @@ import type { NextRequest } from 'next/server';
 import { SupabaseJobsQueue } from '@/lib/jobs.supabase';
 import { getSupabaseAdminClient } from '@/lib/supabase/server';
 
-export const maxDuration = 30; // Vercel Pro/Enterprise max function duration
+export const maxDuration = 30;
 
 export async function POST(request: NextRequest) {
   // ------------------------------------------------------------------
@@ -83,27 +82,12 @@ export async function POST(request: NextRequest) {
     }
 
     await queue.markDone(job.id);
-
-    return NextResponse.json({
-      ok: true,
-      processed: 1,
-      job_id: job.id,
-      kind: job.kind,
-      status: 'done',
-    });
+    return NextResponse.json({ ok: true, processed: 1, job_id: job.id, kind: job.kind, status: 'done' });
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : String(err);
     await queue.markFailed(job.id, errorMsg);
-
     return NextResponse.json(
-      {
-        ok: false,
-        processed: 1,
-        job_id: job.id,
-        kind: job.kind,
-        status: 'failed',
-        error: errorMsg,
-      },
+      { ok: false, processed: 1, job_id: job.id, kind: job.kind, status: 'failed', error: errorMsg },
       { status: 500 }
     );
   }
@@ -128,7 +112,6 @@ async function processIngestLinkJob(
   switch (sourceType) {
     case 'google_drive_folder':
     case 'google_drive_file':
-      // Will be implemented once GOOGLE_OAUTH_CLIENT_ID + CLIENT_SECRET are set
       throw new Error(
         'Google Drive connector is not configured. ' +
           'Set GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET in Vercel env vars.'
@@ -146,59 +129,58 @@ async function processIngestLinkJob(
           'Notion integration is planned for a future PR.'
       );
 
-    case 'generic_webpage': {
-      // Fetch the page and record a deal_files entry
-      const response = await fetch(url, {
-        headers: { 'User-Agent': 'DealLens/0.5 (+https://marketlogicinvestors.com)' },
-        redirect: 'follow',
-        signal: AbortSignal.timeout(15_000),
-      });
-
-      if (!response.ok) {
-        throw new Error(
-          `Failed to fetch ${url}: HTTP ${response.status} ${response.statusText}`
-        );
-      }
-
-      const contentType = response.headers.get('content-type') ?? 'text/html';
-      const body = await response.arrayBuffer();
-      const sizeBytes = body.byteLength;
-
-      // Record in deal_files via admin client
-      const admin = getSupabaseAdminClient();
-      const storagePath = `deals/${dealId}/webpage-${jobId}.html`;
-
-      // Upload raw HTML/content to Supabase Storage
-      const { error: uploadErr } = await admin.storage
-        .from('deal-uploads')
-        .upload(storagePath, Buffer.from(body), {
-          contentType,
-          upsert: true,
-        });
-
-      if (uploadErr) {
-        throw new Error(`Storage upload failed for ${url}: ${uploadErr.message}`);
-      }
-
-      // Insert deal_files row
-      const { error: dbErr } = await admin
-        .from('deal_files')
-        .insert({
-          deal_id: dealId,
-          storage_path: storagePath,
-          mime: contentType.split(';')[0].trim(),
-          size_bytes: sizeBytes,
-          source: 'link_ingest' as const,
-        });
-
-      if (dbErr) {
-        throw new Error(`deal_files insert failed for job ${jobId}: ${dbErr.message}`);
-      }
-
-      break;
-    }
+    case 'generic_webpage':
+      await processGenericWebpage(jobId, url, dealId);
+      return;
 
     default:
       throw new Error(`Unknown source type: ${sourceType}`);
+  }
+}
+
+async function processGenericWebpage(
+  jobId: string,
+  url: string,
+  dealId: string
+): Promise<void> {
+  const response = await fetch(url, {
+    headers: { 'User-Agent': 'DealLens/0.5 (+https://marketlogicinvestors.com)' },
+    redirect: 'follow',
+    signal: AbortSignal.timeout(15_000),
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      `Failed to fetch ${url}: HTTP ${response.status} ${response.statusText}`
+    );
+  }
+
+  const contentType = response.headers.get('content-type') ?? 'text/html';
+  const rawBody = await response.arrayBuffer();
+  const sizeBytes = rawBody.byteLength;
+
+  const admin = getSupabaseAdminClient();
+  const storagePath = `deals/${dealId}/webpage-${jobId}.html`;
+
+  const { error: uploadErr } = await admin.storage
+    .from('deal-uploads')
+    .upload(storagePath, Buffer.from(rawBody), { contentType, upsert: true });
+
+  if (uploadErr) {
+    throw new Error(`Storage upload failed for ${url}: ${uploadErr.message}`);
+  }
+
+  const { error: dbErr } = await admin
+    .from('deal_files')
+    .insert({
+      deal_id: dealId,
+      storage_path: storagePath,
+      mime: contentType.split(';')[0].trim(),
+      size_bytes: sizeBytes,
+      source: 'link_ingest' as const,
+    });
+
+  if (dbErr) {
+    throw new Error(`deal_files insert failed for job ${jobId}: ${dbErr.message}`);
   }
 }

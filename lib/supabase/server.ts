@@ -6,34 +6,30 @@
  *   getSupabaseServerClient()
  *     - Uses the publishable (anon) key + user session from cookies.
  *     - Respects Row Level Security.
- *     - Use in Server Components, Server Actions, and route handlers for
- *       any user-scoped operations.
  *
- *   getSupabaseAdminClient()
+ *   getSupabaseAdminClient(): SupabaseClient<Database>
  *     - Uses the service-role secret key.
  *     - BYPASSES Row Level Security.
- *     - Use only for trusted server operations:
- *         * uploading files to Storage on behalf of a verified user
- *         * inserting cost_ledger rows after a run
- *         * creating profile rows on first sign-in
+ *     - Explicit return type annotation required: without it,
+ *       @supabase/supabase-js@^2.49 (resolved: 2.105.4) cannot infer
+ *       the Database generic through the Omit<Database,'__InternalSupabase'>
+ *       chain in SupabaseClient, causing .from().insert() to resolve to
+ *       'never[]' in strict TypeScript. Explicit SupabaseClient<Database>
+ *       anchors the type correctly.
  *
  * IMPORTANT: This file is server-only. The 'server-only' package causes a
  * build-time error if it is accidentally imported into a Client Component.
  *
- * Required env vars (server-side only — never add NEXT_PUBLIC_ prefix):
- *   SUPABASE_URL
- *   SUPABASE_SECRET_KEY  ← service_role key; never expose to the browser
- *
- * Required env vars (browser-safe, but also readable server-side):
+ * Required env vars:
  *   NEXT_PUBLIC_SUPABASE_URL
  *   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
- *
- * See ENV.md for full setup instructions.
+ *   SUPABASE_URL (optional; falls back to NEXT_PUBLIC_SUPABASE_URL)
+ *   SUPABASE_SECRET_KEY  ← service_role key; never expose to browser
  */
 
 import 'server-only';
 import { createServerClient } from '@supabase/ssr';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import type { Database } from './types';
 
@@ -41,13 +37,6 @@ import type { Database } from './types';
 // User-scoped client (respects RLS)
 // ---------------------------------------------------------------------------
 
-/**
- * Returns a Supabase server client that reads/writes the current user session
- * from the Next.js cookie store.
- *
- * Respects Row Level Security — users see only their own data.
- * Use this for all user-initiated data reads and writes.
- */
 export async function getSupabaseServerClient() {
   const cookieStore = await cookies();
 
@@ -86,15 +75,16 @@ export async function getSupabaseServerClient() {
 // ---------------------------------------------------------------------------
 
 /**
- * Returns a stateless Supabase client using the service-role secret key.
+ * Returns a typed SupabaseClient<Database> using the service-role secret key.
  *
- * Bypasses RLS — use ONLY for trusted server operations.
- * Never call this from Client Components or expose the result to the browser.
- *
- * The client is not a singleton because service-role tokens don’t expire and
- * the client is lightweight to construct.
+ * The explicit return type SupabaseClient<Database> is intentional and load-
+ * bearing: without it the TypeScript compiler cannot propagate the Database
+ * generic through SupabaseClient's complex conditional type chain
+ * (introduced in @supabase/supabase-js@2.49+), which causes
+ * .from('table').insert({...}) to incorrectly resolve the insert type to
+ * 'never[]' under strict mode.
  */
-export function getSupabaseAdminClient() {
+export function getSupabaseAdminClient(): SupabaseClient<Database> {
   const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
   const secretKey = process.env.SUPABASE_SECRET_KEY;
 
