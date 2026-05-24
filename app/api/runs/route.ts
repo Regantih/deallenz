@@ -12,9 +12,14 @@
  *   1. Authenticate caller.
  *   2. Verify deal exists and belongs to the caller.
  *   3. Create a deal_runs row with status 'running'.
- *   4. Asynchronously trigger the swarm orchestrator (using MockModelRouter or AnthropicModelRouter).
+ *   4. Synchronously run the swarm orchestrator — maxDuration=300 keeps the
+ *      Vercel Lambda alive until all agents complete (typ. ~90s).
  *   5. On completion, save the CostLedger, set status 'done' (or 'failed' on error), and persist swarm_output.
  */
+
+// Keep the Vercel Lambda alive for up to 5 minutes so the swarm can finish.
+// Fire-and-forget patterns are killed when the function returns on Vercel.
+export const maxDuration = 300;
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
@@ -132,162 +137,171 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // 5. Asynchronously trigger the swarm pipeline so we can return the run_id immediately
-  (async () => {
-    try {
-      console.log(`[Swarm Background] Starting run ${run.id} for deal ${deal_id}`);
-      
-      const useMocks = process.env.USE_MOCKS === 'true';
-      const router = useMocks
-        ? new MockModelRouter(deal_id)
-        : createModelRouter(deal_id);
-      const storage = new SupabaseStorageClient();
+  // 5. Run the swarm pipeline synchronously.
+  //    maxDuration=300 keeps this Lambda alive until all agents finish.
+  //    A fire-and-forget IIFE would be killed by Vercel the moment we returned.
+  try {
+    console.log(`[Swarm] Starting run ${run.id} for deal ${deal_id}`);
 
-      const orchestrator = new SwarmOrchestrator(router, storage);
+    const useMocks = process.env.USE_MOCKS === 'true';
+    const router = useMocks
+      ? new MockModelRouter(deal_id)
+      : createModelRouter(deal_id);
+    const storage = new SupabaseStorageClient();
 
-      // Fetch linked files and get full pitch deck text from RAG document pages if present
-      const { data: dealFiles } = await adminClient
-        .from('deal_files')
-        .select('*')
-        .eq('deal_id', deal_id);
+    const orchestrator = new SwarmOrchestrator(router, storage);
 
-      let pitchDeckText = '';
-      if (dealFiles && dealFiles.length > 0) {
-        const pdfFile = dealFiles.find((f: any) => f.mime === 'application/pdf');
-        if (pdfFile) {
-          let docId = null;
-          
-          // Try by exact path match
-          const { data: docByPath } = await adminClient
+    // Fetch linked files and get full pitch deck text from RAG document pages if present
+    const { data: dealFiles } = await adminClient
+      .from('deal_files')
+      .select('*')
+      .eq('deal_id', deal_id);
+
+    let pitchDeckText = '';
+    if (dealFiles && dealFiles.length > 0) {
+      const pdfFile = dealFiles.find((f: any) => f.mime === 'application/pdf');
+      if (pdfFile) {
+        let docId = null;
+
+        // Try by exact path match
+        const { data: docByPath } = await adminClient
+          .from('documents')
+          .select('id')
+          .eq('file_path', pdfFile.storage_path);
+
+        if (docByPath && docByPath.length > 0) {
+          docId = docByPath[0].id;
+        }
+
+        // Fallback 1: Match by deal name
+        if (!docId && deal.name) {
+          const firstWord = deal.name.split(' ')[0];
+          const { data: docByName } = await adminClient
             .from('documents')
             .select('id')
-            .eq('file_path', pdfFile.storage_path);
-          
-          if (docByPath && docByPath.length > 0) {
-            docId = docByPath[0].id;
+            .ilike('name', `%${firstWord}%`)
+            .order('created_at', { ascending: false })
+            .limit(1);
+          if (docByName && docByName.length > 0) {
+            docId = docByName[0].id;
           }
+        }
 
-          // Fallback 1: Match by deal name
-          if (!docId && deal.name) {
-            const firstWord = deal.name.split(' ')[0];
-            const { data: docByName } = await adminClient
-              .from('documents')
-              .select('id')
-              .ilike('name', `%${firstWord}%`)
-              .order('created_at', { ascending: false })
-              .limit(1);
-            if (docByName && docByName.length > 0) {
-              docId = docByName[0].id;
-            }
+        // Fallback 2: Latest document
+        if (!docId) {
+          const { data: latestDoc } = await adminClient
+            .from('documents')
+            .select('id')
+            .order('created_at', { ascending: false })
+            .limit(1);
+          if (latestDoc && latestDoc.length > 0) {
+            docId = latestDoc[0].id;
           }
+        }
 
-          // Fallback 2: Latest document
-          if (!docId) {
-            const { data: latestDoc } = await adminClient
-              .from('documents')
-              .select('id')
-              .order('created_at', { ascending: false })
-              .limit(1);
-            if (latestDoc && latestDoc.length > 0) {
-              docId = latestDoc[0].id;
-            }
-          }
+        if (docId) {
+          const { data: pages } = await adminClient
+            .from('document_pages')
+            .select('content')
+            .eq('document_id', docId)
+            .order('page_number', { ascending: true });
 
-          if (docId) {
-            const { data: pages } = await adminClient
-              .from('document_pages')
-              .select('content')
-              .eq('document_id', docId)
-              .order('page_number', { ascending: true });
-
-            if (pages && pages.length > 0) {
-              const fullText = pages.map((p: any) => p.content).join('\n\n');
-              // Truncate to 12,000 chars (~3,000 tokens) to keep API calls fast
-              pitchDeckText = fullText.length > 12000 ? fullText.slice(0, 12000) + '\n[... truncated for brevity ...]' : fullText;
-              console.log(`[Swarm Background] Loaded ${pages.length} pages of pitch deck text for deal ${deal_id} (doc: ${docId}) — ${pitchDeckText.length} chars`);
-            }
+          if (pages && pages.length > 0) {
+            const fullText = pages.map((p: any) => p.content).join('\n\n');
+            // Truncate to 12,000 chars (~3,000 tokens) to keep API calls fast
+            pitchDeckText = fullText.length > 12000 ? fullText.slice(0, 12000) + '\n[... truncated for brevity ...]' : fullText;
+            console.log(`[Swarm] Loaded ${pages.length} pages (doc: ${docId}) — ${pitchDeckText.length} chars`);
           }
         }
       }
-
-      // Build DealRecord structure for the Swarm
-      const dealRecord = {
-        ...deal,
-        stage: deal.stage ?? undefined,
-        pitch_deck_text: pitchDeckText || undefined,
-      };
-
-      // Run orchestrator
-      const enriched = await orchestrator.run(dealRecord);
-      const ledger = enriched.cost_ledger || router.getCostLedger();
-
-      // Write individual ledger entries to the cost_ledger table
-      if (ledger && ledger.entries.length > 0) {
-        const costEntries = ledger.entries.map((entry) => ({
-          run_id: run.id,
-          agent: entry.agent,
-          model: entry.model,
-          tokens_in: entry.tokens_in,
-          tokens_out: entry.tokens_out,
-          usd_cost: entry.usd_cost,
-          duration_ms: entry.duration_ms,
-        }));
-        const { error: ledgerError } = await adminClient.from('cost_ledger').insert(costEntries);
-        if (ledgerError) {
-          console.error('[api/runs] Failed to persist cost ledger entries:', ledgerError);
-        }
-      }
-
-      // Update the deal status in the deals table if approved
-      let nextStatus = enriched.status || 'review';
-      if (nextStatus === 'memo-ready' || nextStatus === 'needs-review') {
-        nextStatus = 'review';
-      }
-      await adminClient
-        .from('deals')
-        .update({ status: nextStatus as any })
-        .eq('id', deal_id);
-
-      // Finalize the deal run
-      const { error: finalizeError } = await adminClient
-        .from('deal_runs')
-        .update({
-          status: 'done',
-          finished_at: new Date().toISOString(),
-          total_usd: ledger.total_usd,
-          total_tokens_in: ledger.total_tokens_in,
-          total_tokens_out: ledger.total_tokens_out,
-          swarm_output: {
-            ...enriched.swarm_output,
-            // Add top-level chapters for easy test/UI access
-            chapters: enriched.swarm_output?.memo?.chapters ?? [],
-          }, // Saves full 14-chapter swarm output
-        } as any) // Cast as any because type file might not have swarm_output column yet
-        .eq('id', run.id);
-
-      if (finalizeError) {
-        console.error('[api/runs] Failed to finalize deal_runs record:', finalizeError);
-      } else {
-        console.log(`[Swarm Background] Successfully finalized run ${run.id}`);
-      }
-
-    } catch (swarmErr) {
-      console.error(`[Swarm Background] Fatal error during run ${run.id}:`, swarmErr);
-      
-      // Update run status to failed
-      await adminClient
-        .from('deal_runs')
-        .update({
-          status: 'failed',
-          finished_at: new Date().toISOString(),
-        })
-        .eq('id', run.id);
     }
-  })();
 
-  return NextResponse.json({
-    ok: true,
-    run_id: run.id,
-    status: 'running',
-  });
+    // Build DealRecord structure for the Swarm
+    const dealRecord = {
+      ...deal,
+      stage: deal.stage ?? undefined,
+      pitch_deck_text: pitchDeckText || undefined,
+    };
+
+    // Run orchestrator (awaited — Lambda stays alive via maxDuration=300)
+    const enriched = await orchestrator.run(dealRecord);
+    const ledger = enriched.cost_ledger || router.getCostLedger();
+
+    // Write individual ledger entries to the cost_ledger table
+    if (ledger && ledger.entries.length > 0) {
+      const costEntries = ledger.entries.map((entry) => ({
+        run_id: run.id,
+        agent: entry.agent,
+        model: entry.model,
+        tokens_in: entry.tokens_in,
+        tokens_out: entry.tokens_out,
+        usd_cost: entry.usd_cost,
+        duration_ms: entry.duration_ms,
+      }));
+      const { error: ledgerError } = await adminClient.from('cost_ledger').insert(costEntries);
+      if (ledgerError) {
+        console.error('[api/runs] Failed to persist cost ledger entries:', ledgerError);
+      }
+    }
+
+    // Update the deal status in the deals table if approved
+    let nextStatus = enriched.status || 'review';
+    if (nextStatus === 'memo-ready' || nextStatus === 'needs-review') {
+      nextStatus = 'review';
+    }
+    await adminClient
+      .from('deals')
+      .update({ status: nextStatus as any })
+      .eq('id', deal_id);
+
+    // Finalize the deal run
+    const { error: finalizeError } = await adminClient
+      .from('deal_runs')
+      .update({
+        status: 'done',
+        finished_at: new Date().toISOString(),
+        total_usd: ledger.total_usd,
+        total_tokens_in: ledger.total_tokens_in,
+        total_tokens_out: ledger.total_tokens_out,
+        swarm_output: {
+          ...enriched.swarm_output,
+          // Add top-level chapters for easy test/UI access
+          chapters: enriched.swarm_output?.memo?.chapters ?? [],
+        }, // Saves full 14-chapter swarm output
+      } as any) // Cast as any because type file might not have swarm_output column yet
+      .eq('id', run.id);
+
+    if (finalizeError) {
+      console.error('[api/runs] Failed to finalize deal_runs record:', finalizeError);
+    } else {
+      console.log(`[Swarm] Successfully finalized run ${run.id}`);
+    }
+
+    return NextResponse.json({
+      ok: true,
+      run_id: run.id,
+      status: 'done',
+    });
+
+  } catch (swarmErr) {
+    console.error(`[Swarm] Fatal error during run ${run.id}:`, swarmErr);
+
+    await adminClient
+      .from('deal_runs')
+      .update({
+        status: 'failed',
+        finished_at: new Date().toISOString(),
+      })
+      .eq('id', run.id);
+
+    return NextResponse.json(
+      {
+        ok: false,
+        error: 'SWARM_FAILED',
+        run_id: run.id,
+        detail: swarmErr instanceof Error ? swarmErr.message : String(swarmErr),
+      },
+      { status: 500 }
+    );
+  }
 }
