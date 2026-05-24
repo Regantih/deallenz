@@ -1,0 +1,615 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>DealLens — VC Deal Intelligence Platform</title><style>
+:root{--ink:#1a1a1a;--paper:#f5f1e8;--rule:#d8d2c2;--accent:#8b6f3d;--mute:#6b6358;--card:#fbfbf8;--ok:#2f7d4f;--err:#9b2c2c;--insight:#e8f5ee;--insightB:#2f7d4f;--warn:#fff8e1;--warnB:#b8860b;--danger:#fde8e8;--dangerB:#9b2c2c}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:Georgia,'Times New Roman',serif;line-height:1.6}
+header{padding:14px 32px;border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:20;background:var(--paper)}
+header b{font-size:17px}nav a{margin-left:18px;color:var(--mute);text-decoration:none;font-size:15px;cursor:pointer;padding-bottom:2px}
+nav a.on{color:var(--ink);font-weight:700;border-bottom:2px solid var(--accent)}
+.view{display:none;max-width:900px;margin:0 auto;padding:32px}.view.show{display:block}
+h1{font-size:32px;margin:0 0 6px;line-height:1.1}.h2{font-size:24px;margin:20px 0 10px;font-weight:700}
+.lede{color:var(--mute);font-size:16px;margin:0 0 20px}
+.kicker{font-family:'Courier New',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
+/* Intake styles */
+.intake-zone{border:2px dashed var(--rule);border-radius:8px;padding:40px;text-align:center;margin:16px 0;cursor:pointer;transition:border-color .2s}
+.intake-zone:hover,.intake-zone.dragover{border-color:var(--accent);background:#f9f6ef}
+.intake-zone input[type=file]{display:none}
+.source-list{margin:16px 0}.source-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--rule);border-radius:6px;margin-bottom:8px;background:var(--card)}
+.source-item .type-badge{font-family:'Courier New',monospace;font-size:10px;text-transform:uppercase;padding:2px 8px;border-radius:3px;background:var(--accent);color:#fff;letter-spacing:.1em}
+.source-item .name{flex:1;font-size:14px}.source-item .status{font-size:12px;color:var(--ok)}
+.source-item .remove{cursor:pointer;color:var(--err);font-size:18px;border:none;background:none}
+.link-input{display:flex;gap:8px;margin:10px 0}
+.link-input input{flex:1;padding:10px 14px;border:1px solid var(--rule);border-radius:6px;font-family:Georgia,serif;font-size:14px}
+.link-input button,.action-btn{padding:10px 20px;border:1px solid var(--ink);background:var(--ink);color:var(--paper);border-radius:6px;cursor:pointer;font-family:Georgia,serif;font-size:14px}
+.action-btn.secondary{background:var(--paper);color:var(--ink)}
+.action-btn:disabled{opacity:.4;cursor:not-allowed}
+.text-input-area{width:100%;min-height:120px;padding:14px;border:1px solid var(--rule);border-radius:6px;font-family:Georgia,serif;font-size:14px;resize:vertical;background:var(--card)}
+.chat{background:var(--card);border:1px solid var(--rule);border-radius:6px;padding:16px;margin-bottom:16px;min-height:200px;max-height:360px;overflow-y:auto}
+.bubble{margin-bottom:12px;padding:10px 14px;border-radius:8px;font-size:15px;line-height:1.5;max-width:85%}
+.bubble.bot{background:#e8e4d8;border:1px solid var(--rule);color:var(--ink)}.bubble.user{background:var(--ink);color:var(--paper);margin-left:auto;text-align:right}
+.inputrow{display:flex;gap:8px;margin-bottom:16px}
+.inputrow textarea{flex:1;font-family:Georgia,serif;font-size:15px;padding:10px;border:1px solid var(--rule);border-radius:4px;resize:none;background:var(--card);min-height:44px}
+button{font-family:Georgia,serif;font-size:14px;padding:10px 16px;border:1px solid var(--ink);background:var(--ink);color:var(--paper);border-radius:4px;cursor:pointer}
+button:disabled{opacity:.4;cursor:not-allowed}
+button.ghost{background:var(--paper);color:var(--ink)}
+/* Dossier & Pipeline */
+.fields{display:grid;grid-template-columns:110px 1fr;gap:0;margin-bottom:16px}.fl{font-family:'Courier New',monospace;font-size:11px;text-transform:uppercase;color:var(--mute);letter-spacing:.08em;padding:7px 0;border-bottom:1px dashed var(--rule)}.fv{font-size:14px;padding:7px 0;border-bottom:1px dashed var(--rule)}
+.agent-card{background:var(--card);border:1px solid var(--rule);border-radius:6px;padding:16px;margin-bottom:14px}
+.agent-card h3{font-size:18px;display:flex;justify-content:space-between;align-items:center;margin:0 0 4px}
+.badge{font-family:'Courier New',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:2px 8px;border-radius:99px;border:1px solid var(--rule);color:var(--mute)}
+.badge.run{color:var(--accent);border-color:var(--accent)}.badge.ok{color:var(--ok);border-color:var(--ok)}
+.role{color:var(--mute);font-size:13px;margin:0 0 8px}
+.logbox{background:#1a1a1a;color:#e8e4d8;font-family:'Courier New',monospace;font-size:11px;padding:10px;border-radius:4px;max-height:140px;overflow:auto;white-space:pre-wrap;margin:6px 0;display:none}.logbox.show{display:block}
+.ev-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.ev{border:1px solid var(--rule);border-radius:4px;padding:8px 10px;font-size:13px;background:var(--paper)}.ev b{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);margin-bottom:2px}
+.bar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center}.meta{font-family:'Courier New',monospace;font-size:12px;color:var(--mute)}
+/* Memo & Dossier chapters */
+.sample-btn{background:var(--accent);border-color:var(--accent);color:#fff;font-size:13px;padding:8px 14px}
+.pills{display:flex;flex-wrap:wrap;gap:6px;position:sticky;top:52px;z-index:15;background:var(--paper);padding:10px 0;border-bottom:1px solid var(--rule);margin-bottom:24px}
+.pill{font-family:'Courier New',monospace;font-size:12px;padding:6px 14px;border:1px solid var(--rule);border-radius:4px;cursor:pointer;background:var(--card);color:var(--mute);text-transform:uppercase;letter-spacing:.08em}
+.pill.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.chapter{margin-bottom:40px;scroll-margin-top:120px}
+.callout{border-left:4px solid var(--accent);padding:16px 20px;margin:16px 0;border-radius:0 6px 6px 0;font-size:15px}
+.callout.insight{background:var(--insight);border-color:var(--insightB)}
+.callout.warn{background:var(--warn);border-color:var(--warnB)}
+.callout.danger{background:var(--danger);border-color:var(--dangerB)}
+.data-table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px}
+.data-table th{text-align:left;font-family:'Courier New',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--mute);padding:8px 10px;border-bottom:2px solid var(--rule)}
+.data-table td{padding:8px 10px;border-bottom:1px solid var(--rule)}
+.data-table tr.highlight{background:var(--ink);color:var(--paper);font-weight:700}
+.data-table tr.highlight td{border-bottom-color:#333}
+.score-bar{height:20px;border-radius:3px;background:var(--ok);display:inline-block}
+.verdict-card{background:var(--ink);color:var(--paper);padding:24px;border-radius:8px;margin:20px 0}
+.verdict-card h3{font-family:'Courier New',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 10px}
+.verdict-card p{font-size:16px;line-height:1.5;margin:0 0 14px}
+.verdict-card .cond{font-size:14px;opacity:.8}
+/* Call Prep */
+.question-bank{margin:16px 0}.q-cat{margin-bottom:20px}
+.q-cat h4{font-family:'Courier New',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);margin:0 0 8px}
+.q-item{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid var(--rule);border-radius:4px;margin-bottom:6px;background:var(--card);cursor:pointer;transition:background .15s}
+.q-item:hover{background:#f0ece0}
+.q-item.selected{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.q-item .q-check{width:20px;height:20px;border:2px solid var(--rule);border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px}
+.q-item.selected .q-check{border-color:var(--accent);color:var(--accent)}
+.q-item .q-text{font-size:14px;line-height:1.4}
+.q-item .q-test{font-size:12px;color:var(--mute);margin-top:2px}
+.q-item.selected .q-test{color:#aaa}
+.signal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
+.signal-card{border:1px solid var(--rule);border-radius:6px;padding:12px;background:var(--card)}
+.signal-card label{font-family:'Courier New',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--mute);display:block;margin-bottom:4px}
+.signal-card select,.signal-card textarea{width:100%;border:1px solid var(--rule);border-radius:4px;padding:6px;font-family:Georgia,serif;font-size:13px;background:var(--paper)}
+.signal-card textarea{min-height:60px;resize:vertical}
+/* Logs */
+.log-stat{border:1px solid var(--rule);border-radius:4px;padding:8px 10px;font-size:13px;background:var(--paper);min-width:80px}
+.log-stat b{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--mute)}
+.log-stat .num{font-size:22px;font-weight:700}
+.trace-item{padding:12px 0;border-bottom:1px solid var(--rule);display:flex;gap:12px;align-items:flex-start}
+.trace-item .t-time{font-family:'Courier New',monospace;font-size:11px;color:var(--mute);min-width:90px;flex-shrink:0}
+.trace-item .t-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.trace-item .t-icon.I{background:#e8e4d8;color:var(--ink)}
+.trace-item .t-icon.A{background:var(--ink);color:var(--paper)}
+.trace-item .t-icon.T{background:var(--accent);color:#fff}
+.trace-item .t-icon.E{background:var(--ok);color:#fff}
+.trace-item .t-icon.D{background:var(--ink);color:var(--paper)}
+.trace-item .t-icon.M{background:var(--accent);color:#fff}
+.trace-item .t-icon.C{background:#6b5b95;color:#fff}
+.trace-item .t-body{flex:1}
+.trace-item .t-label{font-family:'Courier New',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--mute)}
+.trace-item .t-msg{font-size:14px;margin-top:2px}
+.trace-item .t-detail{font-size:12px;color:var(--accent);cursor:pointer;margin-top:2px}
+.filter-pills{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+.filter-pill{font-family:'Courier New',monospace;font-size:11px;padding:4px 12px;border:1px solid var(--rule);border-radius:4px;cursor:pointer;background:var(--card);color:var(--mute)}
+.filter-pill.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.nav-badge{background:var(--accent);color:#fff;font-size:10px;padding:1px 6px;border-radius:10px;margin-left:4px;font-family:'Courier New',monospace}
+.progress-bar{width:100%;height:6px;background:var(--rule);border-radius:3px;margin:8px 0;overflow:hidden}
+.progress-bar .fill{height:100%;background:var(--ok);border-radius:3px;transition:width .5s}
+.tab-count{font-size:12px;color:var(--mute);margin-left:6px}
+</style></head><body>
+<header><b>DealLens · Marketlogic Investors</b><nav><a onclick="go('intake')" class="on">Intake</a><a onclick="go('dossier')">Dossier</a><a onclick="go('pipeline')">Pipeline</a><a onclick="go('callprep')">Call Prep</a><a onclick="go('memo')">IC Memo</a><a onclick="go('logs')">Logs <span id="logBadge" class="nav-badge">0</span></a></nav></header>
+
+<!-- ====== 1. INTAKE ====== -->
+<div id="v-intake" class="view show">
+<div class="kicker">01 · INTAKE</div>
+<h1>Ingest deal materials.</h1>
+<p class="lede">Drop documents, paste links, attach files, or describe the deal. The intake agent parses, extracts, and organizes everything into a structured deal record.</p>
+
+<button class="sample-btn" onclick="loadSample()">Load sample: PQC Bank (Seed Fintech)</button>
+
+<div class="h2">Upload Documents</div>
+<div class="intake-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+<div style="font-size:32px;margin-bottom:8px">📄</div>
+<div>Drag & drop pitch decks, memos, financials, term sheets</div>
+<div style="font-size:12px;color:var(--mute);margin-top:4px">PDF, DOCX, XLSX, TXT, MD, CSV • Max 25MB each</div>
+<input type="file" id="fileInput" multiple accept=".pdf,.docx,.xlsx,.txt,.md,.csv,.pptx" onchange="handleFiles(this.files)">
+</div>
+
+<div class="h2">Add Links</div>
+<div class="link-input">
+<input type="text" id="linkUrl" placeholder="Company website, Crunchbase, LinkedIn, news articles...">
+<button onclick="addLink()">Add</button>
+</div>
+
+<div class="h2">Paste Text</div>
+<textarea class="text-input-area" id="textInput" placeholder="Paste founder emails, deal notes, partner forwards, pitch deck text, anything..."></textarea>
+<div style="margin-top:8px"><button class="ghost" onclick="addText()">Add text to intake</button></div>
+
+<div class="h2">Chat with Intake Agent</div>
+<div class="chat" id="intakeChat"><div class="bubble bot">Hi — I'm the DealLens intake agent. Feed me documents, links, or just describe the deal. I'll extract and organize everything into a structured record. What do you have?</div></div>
+<div class="inputrow"><textarea id="intakeMsg" placeholder="Describe the deal, ask questions, or provide context..."></textarea><button onclick="sendIntake()">Send</button></div>
+
+<div class="h2">Ingested Sources <span id="sourceCount" class="tab-count">0</span></div>
+<div id="sourceList" class="source-list"></div>
+
+<div class="h2">Extracted Deal Record</div>
+<div class="fields" id="dealFields"></div>
+<div class="progress-bar"><div class="fill" id="extractProgress" style="width:0%"></div></div>
+<div id="extractStatus" style="font-size:12px;color:var(--mute)"></div>
+
+<button id="advanceBtn" class="action-btn" style="width:100%;margin-top:16px" disabled onclick="advanceToDossier()">Build Pre-Call Dossier →</button>
+</div>
+
+<!-- ====== 2. DOSSIER ====== -->
+<div id="v-dossier" class="view">
+<div class="kicker">02 · PRE-CALL RESEARCH DOSSIER</div>
+<h1>Everything publicly knowable.</h1>
+<p class="lede">90–120 minutes of focused research compressed. If you can answer it from this document, don't ask it on the founder call.</p>
+
+<div id="dossierPills" class="pills"></div>
+<div id="dossierBody"></div>
+
+<button id="dossierAdvBtn" class="action-btn" style="width:100%;margin-top:20px" disabled onclick="advanceToPipeline()">Run Enrichment Agents →</button>
+</div>
+
+<!-- ====== 3. PIPELINE ====== -->
+<div id="v-pipeline" class="view">
+<div class="kicker">03 · ENRICHMENT</div>
+<h1>Agents at work.</h1>
+<p class="lede">Six specialist agents enrich the deal record with evidence. Every claim cited, every number sourced.</p>
+<div class="bar"><button onclick="runAll()">Run all agents</button><button class="ghost" onclick="resetPipe()">Reset</button><span id="pipeStatus" class="meta"></span></div>
+<div id="agentList"></div>
+<button id="memoBtn" class="action-btn" style="width:100%;margin-top:16px" disabled onclick="generateMemo()">Generate IC Memo →</button>
+</div>
+
+<!-- ====== 4. CALL PREP ====== -->
+<div id="v-callprep" class="view">
+<div class="kicker">04 · 15-MINUTE FOUNDER CALL PLAYBOOK</div>
+<h1>Signal-density test.</h1>
+<p class="lede">Pick 4–6 sniper questions from the bench. No improvising. If the deck answers it, don't ask it.</p>
+
+<div class="h2">Time Allocation</div>
+<table class="data-table">
+<tr><th>Time</th><th>What's Happening</th><th>Who Talks</th></tr>
+<tr><td>0:00–1:00</td><td>Intros, set the frame</td><td>You (45s)</td></tr>
+<tr><td>1:00–3:00</td><td>60-Second Pitch Test</td><td>Founder</td></tr>
+<tr><td>3:00–12:00</td><td>High-Signal Questions (4–6)</td><td>Founder mostly</td></tr>
+<tr><td>12:00–14:00</td><td>Their questions + round logistics</td><td>Mixed</td></tr>
+<tr><td>14:00–15:00</td><td>Next steps, materials ask, close</td><td>You</td></tr>
+</table>
+
+<div class="h2">Select Your Questions <span id="qCount" class="tab-count">0/6 selected</span></div>
+<div id="questionBank" class="question-bank"></div>
+
+<div class="h2">Opening Script</div>
+<div class="callout insight" id="openingScript">Thanks for the time. I'm [name] from Marketlogic Investors. We focus on [stage/sector/thesis]. I've spent 2 hours on your deck and the market — I have specific questions, so I want to be efficient with your 15 minutes.</div>
+
+<div class="h2">60-Second Pitch Test — What to Listen For</div>
+<div class="signal-grid">
+<div class="signal-card"><label>Crispness</label><select id="sig_crisp"><option value="">--</option><option>🟢 Clean structure</option><option>🟡 Mostly clear</option><option>🔴 Rambles</option></select></div>
+<div class="signal-card"><label>Customer Specificity</label><select id="sig_cust"><option value="">--</option><option>🟢 Names real persona</option><option>🟡 Generic ICP</option><option>🔴 Waves at enterprises</option></select></div>
+<div class="signal-card"><label>Why-Now</label><select id="sig_whynow"><option value="">--</option><option>🟢 Specific catalyst</option><option>🟡 Generic trend</option><option>🔴 No real why-now</option></select></div>
+<div class="signal-card"><label>Unprompted Numbers</label><select id="sig_nums"><option value="">--</option><option>🟢 Volunteers metrics</option><option>🟡 Only when asked</option><option>🔴 Avoids numbers</option></select></div>
+</div>
+
+<div class="h2">Real-Time Signal Capture</div>
+<div class="signal-grid">
+<div class="signal-card"><label>Most Impressive Moment</label><textarea id="sig_best" placeholder="What stood out positively..."></textarea></div>
+<div class="signal-card"><label>Most Concerning Moment</label><textarea id="sig_worst" placeholder="What raised a flag..."></textarea></div>
+<div class="signal-card"><label>Gut Score (1–10)</label><select id="sig_gut"><option value="">--</option><option>10</option><option>9</option><option>8</option><option>7</option><option>6</option><option>5</option><option>4</option><option>3</option><option>2</option><option>1</option></select></div>
+<div class="signal-card"><label>Decision</label><select id="sig_decision"><option value="">--</option><option>Advance to IC Pre-Read</option><option>Schedule follow-up</option><option>Hold — need more info</option><option>Pass — write 3-line note</option><option>Triage out</option></select></div>
+</div>
+
+<div class="h2">Post-Call Notes</div>
+<textarea class="text-input-area" id="postCallNotes" placeholder="Update gut score, key unknowns resolved, what got worse, next-step commitment..."></textarea>
+</div>
+
+<!-- ====== 5. IC MEMO ====== -->
+<div id="v-memo" class="view">
+<div id="memoPills" class="pills"></div>
+<div id="memoTitle"></div>
+<div id="memoSub"></div>
+<div id="memoBody"></div><div style="margin:32px 0;display:flex;gap:12px;flex-wrap:wrap"><button class="ghost" onclick="exportMemoDoc()">Download IC Memo</button><button class="ghost" onclick="exportThesisDoc()">Download Industry Thesis</button><button class="ghost" onclick="exportAuditTrail()">Download Audit Trail</button></div>
+</div>
+
+<!-- ====== 6. LOGS ====== -->
+<div id="v-logs" class="view">
+<div class="kicker">06 · OBSERVABILITY</div>
+<h1>Decision trace.</h1>
+<p class="lede">Every action, tool call, extraction, and reasoning step logged with timestamps. Full transparency on how the decision was produced.</p>
+<div class="ev-grid" id="logStats"></div>
+<div class="filter-pills" id="traceFilters"></div>
+<button class="ghost" onclick="exportLogs()" style="margin:8px 0">Export as JSON</button>
+<div id="traceList"></div>
+</div>
+
+<script>
+// ===== GLOBAL STATE =====
+let R={},sources=[],trace=[],enrichData={},traceFilter='all',selectedQs=new Set();
+const DEAL_FIELDS=['company','stage','sector','hq','website','thesis','ask','wtp','founders','arr','mom','nrr','founded','totalRaised','leadInvestor','icp','pricing','teamSize'];
+const sleep=(ms)=>new Promise(r=>setTimeout(r,ms));
+const ts=()=>{const d=new Date();return d.toTimeString().split(' ')[0]+'.'+String(d.getMilliseconds()).padStart(3,'0')};
+function log(type,agent,msg,detail=''){trace.push({time:ts(),type,agent:agent||'',msg,detail:detail||''});$('logBadge').textContent=trace.length;$('logBadge').textContent=trace.length;}
+const $=id=>document.getElementById(id);
+
+// ===== NAVIGATION =====
+function go(v){document.querySelectorAll('.view').forEach(e=>e.classList.remove('show'));$('v-'+v).classList.add('show');document.querySelectorAll('nav a').forEach(a=>{a.classList.toggle('on',a.textContent.toLowerCase().includes(v.replace('callprep','call').replace('memo','ic')||v))});log('decision','system','Navigated to '+v);if(v==='logs')renderLogs();if(v==='callprep')renderQuestionBank();if(v==='pipeline'&&R.company)renderPipeline();if(v==='dossier'&&R.company)buildDossier();}
+
+// ===== INTAKE: FILE HANDLING =====
+const dropZone=$('dropZone');
+dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.classList.add('dragover')});
+dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop',e=>{e.preventDefault();dropZone.classList.remove('dragover');handleFiles(e.dataTransfer.files)}); dropZone.addEventListener('click',()=>document.getElementById('fileInput').click());
+
+function handleFiles(files){for(const f of files){const ext=f.name.split('.').pop().toLowerCase();const src={id:Date.now()+Math.random(),type:ext.toUpperCase(),name:f.name,size:(f.size/1024).toFixed(1)+'KB',status:'parsed',content:''};if(['txt','md','csv'].includes(ext)){const reader=new FileReader();reader.onload=e=>{src.content=e.target.result;parseSourceContent(src)};reader.readAsText(f)}else{src.content='[Binary file: '+f.name+' - '+src.size+']';parseSourceContent(src)}sources.push(src);log('intake','intake-agent','File ingested: '+f.name+' ('+src.size+')');}renderSources();}
+
+function addLink(){const url=$('linkUrl').value.trim();if(!url)return;const src={id:Date.now(),type:'LINK',name:url,size:'--',status:'crawled',content:'[Crawled: '+url+']'};sources.push(src);$('linkUrl').value='';log('intake','intake-agent','Link added: '+url);parseSourceContent(src);renderSources();}
+
+function addText(){const txt=$('textInput').value.trim();if(!txt)return;const src={id:Date.now(),type:'TEXT',name:'Pasted text ('+txt.length+' chars)',size:txt.length+' chars',status:'parsed',content:txt};sources.push(src);$('textInput').value='';log('intake','intake-agent','Text ingested: '+txt.length+' chars');parseSourceContent(src);renderSources();}
+
+function parseSourceContent(src){
+  // NLP-style extraction from content
+  const t=src.content.toLowerCase();
+  const extract=(patterns)=>{for(const p of patterns){const m=t.match(p);if(m)return m[1]||m[0]}return null};
+  // Try to extract fields from any text content
+  const found=extract([/company[:\s]+([\w\s]+)/i]); if(found&&!R.company)R.company=found.trim();
+  const stg=extract([/series\s[a-c]/i,/seed/i,/pre-seed/i,/growth/i]); if(stg&&!R.stage)R.stage=stg.trim();
+  const sec=extract([/fintech/i,/saas/i,/healthtech/i,/biotech/i,/ai\/ml/i,/cybersecurity/i,/edtech/i,/climatetech/i,/devtools/i]); if(sec&&!R.sector)R.sector=sec.trim();
+  renderDealFields();updateExtractProgress();
+}
+
+function renderSources(){
+  $('sourceCount').textContent=sources.length;
+  $('sourceList').innerHTML=sources.map(s=>'<div class="source-item"><span class="type-badge">'+s.type+'</span><span class="name">'+s.name+'</span><span class="status">✓ '+s.status+'</span><button class="remove" onclick="removeSource('+s.id+')">×</button></div>').join('');
+}
+function removeSource(id){sources=sources.filter(s=>s.id!==id);renderSources();}
+
+function renderDealFields(){
+  const labels={company:'Company',stage:'Stage',sector:'Sector',hq:'HQ',website:'Website',thesis:'Thesis',ask:'Ask',wtp:'Willingness to Pay',founders:'Founders',arr:'ARR',mom:'MoM Growth',nrr:'NRR',founded:'Founded',totalRaised:'Total Raised',leadInvestor:'Lead Investor',icp:'ICP',pricing:'Pricing',teamSize:'Team Size'};
+  $('dealFields').innerHTML=DEAL_FIELDS.map(k=>'<div class="fl">'+labels[k]+'</div><div class="fv">'+(R[k]||'—')+'</div>').join('');
+  const filled=DEAL_FIELDS.filter(k=>R[k]).length;
+  $('advanceBtn').disabled=filled<3;
+}
+
+function updateExtractProgress(){
+  const filled=DEAL_FIELDS.filter(k=>R[k]).length;
+  const pct=Math.round(filled/DEAL_FIELDS.length*100);
+  $('extractProgress').style.width=pct+'%';
+  $('extractStatus').textContent=filled+'/'+DEAL_FIELDS.length+' fields extracted ('+pct+'%)';
+}
+
+// ===== INTAKE CHAT =====
+function sendIntake(){
+  const msg=$('intakeMsg').value.trim();if(!msg)return;$('intakeMsg').value='';
+  addBubble('user',msg);log('intake','intake-agent','User message: '+msg);
+  // Parse message for deal fields
+  const t=msg.toLowerCase();
+  if(!R.company){const m=msg.match(/(?:looking at|company[:\s]+|called\s+)([A-Z][\w\s]+?)(?:[,.]|$)/);if(m)R.company=m[1].trim()}
+  if(!R.stage&&t.match(/seed|series\s[a-c]|pre-seed|growth/i)){R.stage=t.match(/pre-seed|seed|series\s[a-c]|growth/i)[0]}
+  if(!R.sector&&t.match(/fintech|saas|health|bio|cyber|ai|climate|dev|edu|enterprise/i)){R.sector=t.match(/fintech|saas|healthtech|biotech|cybersecurity|ai\/ml|climatetech|devtools|edtech|enterprise/i)?.[0]||'Tech'}
+  const arrM=msg.match(/\$(\d+[kKmM])\s*(?:arr|revenue)/i);if(arrM)R.arr=arrM[1].toUpperCase();
+  const askM=msg.match(/(?:raising|asking|round)\s*\$([\d.]+[kKmM])/i);if(askM)R.ask='$'+askM[1].toUpperCase();
+  renderDealFields();updateExtractProgress();
+  setTimeout(()=>{const filled=DEAL_FIELDS.filter(k=>R[k]).length;
+    if(filled<3)addBubble('bot','Got it. I need a few more details. What\'s the company name, stage, and sector?');
+    else if(filled<8)addBubble('bot','Good, I\'ve extracted '+filled+' fields. Keep adding details or click Finalize to build the dossier.');
+    else addBubble('bot','Record is strong with '+filled+' fields. Ready to build the Pre-Call Research Dossier.');},300);
+}
+function addBubble(who,msg){const d=document.createElement('div');d.className='bubble '+who;d.textContent=msg;$('intakeChat').appendChild(d);$('intakeChat').scrollTop=$('intakeChat').scrollHeight;}
+
+// ===== SAMPLE DEAL =====
+function loadSample(){
+  R={company:'PQC Bank',stage:'Seed',sector:'Fintech',hq:'Austin, TX',website:'pqcbank.com',thesis:'Post-quantum cryptography for community banks. First-mover in NIST-approved PQC key management sold as SaaS to banks under $10B AUM.',ask:'$3M at $15M post-money',wtp:'~$24k/yr per bank',founders:'2 ex-Plaid engineers, 1 NIST PQC working-group member',arr:'$420k',mom:'12%',nrr:'118%',founded:'2024',totalRaised:'$750K (pre-seed)',leadInvestor:'Open',icp:'Community banks <$10B AUM, compliance officers',pricing:'SaaS, per-bank license',teamSize:'8'};
+  sources=[{id:1,type:'DECK',name:'PQC_Bank_Pitch_Deck.pdf',size:'2.4MB',status:'parsed',content:'pitch deck'},{id:2,type:'LINK',name:'https://pqcbank.com',size:'--',status:'crawled',content:'website'},{id:3,type:'LINK',name:'https://crunchbase.com/organization/pqc-bank',size:'--',status:'crawled',content:'crunchbase'},{id:4,type:'MD',name:'Pre_Call_Research_Dossier.md',size:'18KB',status:'parsed',content:'dossier template'},{id:5,type:'MD',name:'15_Min_Founder_Call_Playbook.md',size:'12KB',status:'parsed',content:'call playbook'}];
+  addBubble('user','Load sample: PQC Bank, seed-stage fintech in Austin, post-quantum crypto for community banks.');
+  addBubble('bot','Got it. I\'ve extracted all '+DEAL_FIELDS.filter(k=>R[k]).length+' fields from the PQC Bank deal. '+sources.length+' sources ingested. Record is ready. Click Build Pre-Call Dossier to continue.');
+  renderSources();renderDealFields();updateExtractProgress();
+  log('intake','intake-agent','Sample deal loaded: '+R.company);log('intake','intake-agent','Pre-populated all fields from sample data');
+}
+
+// ===== DOSSIER BUILDER =====
+function advanceToDossier(){
+  log('decision','system','Intake finalized. Building Pre-Call Research Dossier.');go('dossier');buildDossier();
+}
+
+function buildDossier(){
+  const c=R.company||'Unknown';const s=R.sector||'Tech';const st=R.stage||'Seed';
+  const sections=[
+    {id:'gating',title:'0. Gating Criteria',content:renderGating(c,st,s)},
+    {id:'company',title:'1. Company from Public Sources',content:renderCompanySection(c,s)},
+    {id:'founders',title:'2. Founders Deep Background',content:renderFoundersSection()},
+    {id:'market',title:'3. Market & Industry',content:renderMarketSection(s)},
+    {id:'competition',title:'4. Competition',content:renderCompetitionSection(c,s)},
+    {id:'process',title:'5. Process & Round Intel',content:renderProcessSection()},
+    {id:'synthesis',title:'6. Pre-Call Synthesis',content:renderSynthesisSection()}
+  ];
+  $('dossierPills').innerHTML=sections.map((s,i)=>'<div class="pill'+(i===0?' active':'')+'" onclick="scrollDossier(\''+s.id+'\')">'+(s.title.split('.')[0]||s.title)+'</div>').join('');
+  $('dossierBody').innerHTML=sections.map(s=>'<div class="chapter" id="dos-'+s.id+'">'+s.content+'</div>').join('');
+  $('dossierAdvBtn').disabled=false;
+  log('decision','system','Pre-Call Dossier built with '+sections.length+' sections');
+}
+function scrollDossier(id){document.getElementById('dos-'+id)?.scrollIntoView({behavior:'smooth'});$('dossierPills').querySelectorAll('.pill').forEach(p=>p.classList.toggle('active',p.textContent.toLowerCase().includes(id)));}
+
+function renderGating(c,st,s){
+  const checks=[{label:'Stage fit',value:st+' — within mandate',pass:true},{label:'Sector fit',value:s+' — active thesis area',pass:true},{label:'Geography',value:R.hq||'US — within scope',pass:true},{label:'Check size',value:R.ask||'TBD',pass:!!R.ask},{label:'Thesis alignment',value:R.thesis?'Aligned: '+R.thesis.substring(0,80)+'...':'Needs review',pass:!!R.thesis},{label:'Conflict check',value:'No known conflicts',pass:true}];
+  const allPass=checks.every(c=>c.pass);
+  return '<div class="kicker">0 · GATING CRITERIA CHECK</div><h1>Does '+c+' pass the gate?</h1><p class="lede">Test against fund mandate before any other research. If it fails, stop and write a pass note.</p>'+
+  '<table class="data-table"><tr><th>Criterion</th><th>Assessment</th><th>Status</th></tr>'+checks.map(c=>'<tr><td><strong>'+c.label+'</strong></td><td>'+c.value+'</td><td>'+(c.pass?'<span style="color:var(--ok)">✓ PASS</span>':'<span style="color:var(--err)">✗ REVIEW</span>')+'</td></tr>').join('')+'</table>'+
+  '<div class="callout '+(allPass?'insight':'warn')+'">'+(allPass?'<strong>GATING VERDICT: PASS THROUGH</strong> — All criteria met. Proceed with research.':'<strong>GATING VERDICT: EDGE CASE</strong> — Some criteria need review. Flag for partner.')+'</div>';
+}
+
+function renderCompanySection(c,s){
+  return '<div class="kicker">1 · COMPANY FROM PUBLIC SOURCES</div><h1>'+c+' — what\'s visible.</h1>'+
+  '<div class="h2">Web Positioning</div>'+
+  '<table class="data-table"><tr><th>Signal</th><th>Finding</th></tr>'+
+  '<tr><td>Value prop</td><td>'+(R.thesis||'Not yet extracted')+'</td></tr>'+
+  '<tr><td>Target customer (ICP)</td><td>'+(R.icp||'Not yet identified')+'</td></tr>'+
+  '<tr><td>Pricing</td><td>'+(R.pricing||'Not visible')+'</td></tr>'+
+  '<tr><td>Team size</td><td>'+(R.teamSize||'—')+'</td></tr>'+
+  '<tr><td>Founded</td><td>'+(R.founded||'—')+'</td></tr>'+
+  '</table>'+
+  '<div class="h2">Funding & Cap Table</div>'+
+  '<table class="data-table"><tr><th>Detail</th><th>Value</th></tr>'+
+  '<tr><td>Total raised</td><td>'+(R.totalRaised||'—')+'</td></tr>'+
+  '<tr><td>Current round</td><td>'+(R.ask||'—')+'</td></tr>'+
+  '<tr><td>Lead investor</td><td>'+(R.leadInvestor||'—')+'</td></tr>'+
+  '<tr><td>Stage</td><td>'+(R.stage||'—')+'</td></tr></table>'+
+  '<div class="h2">Traction Signals</div>'+
+  '<div class="ev-grid">'+
+  (R.arr?'<div class="ev"><b>ARR</b>'+R.arr+'</div>':'')+
+  (R.mom?'<div class="ev"><b>MoM Growth</b>'+R.mom+'</div>':'')+
+  (R.nrr?'<div class="ev"><b>NRR</b>'+R.nrr+'</div>':'')+
+  (R.wtp?'<div class="ev"><b>WTP</b>'+R.wtp+'</div>':'')+
+  '</div>';
+}
+
+function renderFoundersSection(){
+  return '<div class="kicker">2 · FOUNDERS DEEP BACKGROUND</div><h1>Who is building this?</h1>'+
+  '<p class="lede">For each founder: career arc, domain depth, public footprint, co-founder dynamics.</p>'+
+  '<div class="callout warn"><strong>Founders:</strong> '+(R.founders||'Not yet identified')+'</div>'+
+  '<div class="h2">Research Checklist</div>'+
+  '<table class="data-table"><tr><th>Item</th><th>Status</th><th>Notes</th></tr>'+
+  '<tr><td>LinkedIn career arc</td><td>Pending</td><td>Full timeline with role-by-role review</td></tr>'+
+  '<tr><td>Prior company outcomes</td><td>Pending</td><td>Alive? Acquired? Failed?</td></tr>'+
+  '<tr><td>Domain experience depth</td><td>Pending</td><td>Built/scaled vs advised/observed</td></tr>'+
+  '<tr><td>Public footprint</td><td>Pending</td><td>Twitter, blog, podcasts, talks, GitHub</td></tr>'+
+  '<tr><td>Co-founder relationship</td><td>Pending</td><td>Worked together before? How long?</td></tr>'+
+  '<tr><td>Backchannel references</td><td>Pending</td><td>Former colleagues, prior investors</td></tr></table>'+
+  '<div class="callout insight">The enrichment agents will fill these fields with sourced data. Run the pipeline to complete.</div>';
+}
+
+function renderMarketSection(s){
+  return '<div class="kicker">3 · MARKET & INDUSTRY</div><h1>Is the market real and growing?</h1>'+
+  '<p class="lede">Directional view — enough to ask intelligent questions. Full analysis lives in the IC memo.</p>'+
+  '<table class="data-table"><tr><th>Dimension</th><th>Finding</th><th>Source</th></tr>'+
+  '<tr><td>Market category</td><td>'+s+'</td><td>Intake</td></tr>'+
+  '<tr><td>Market size</td><td>Pending agent enrichment</td><td>—</td></tr>'+
+  '<tr><td>Growth rate (5yr)</td><td>Pending</td><td>—</td></tr>'+
+  '<tr><td>Why-now catalyst</td><td>Pending</td><td>—</td></tr>'+
+  '<tr><td>Recent funding flow</td><td>Pending</td><td>—</td></tr>'+
+  '<tr><td>Recent M&A</td><td>Pending</td><td>—</td></tr>'+
+  '<tr><td>Regulatory landscape</td><td>Pending</td><td>—</td></tr></table>'+
+  '<div class="callout insight">Run the Research Agent to populate market data from web sources, Crunchbase, and news.</div>';
+}
+
+function renderCompetitionSection(c,s){
+  return '<div class="kicker">4 · COMPETITION</div><h1>Named, not vague.</h1>'+
+  '<p class="lede">Direct competitors, indirect threats, status quo, BigCo risk.</p>'+
+  '<table class="data-table"><tr><th>Type</th><th>Competitor</th><th>Stage</th><th>Differentiation</th></tr>'+
+  '<tr><td>Direct</td><td>Pending enrichment</td><td>—</td><td>—</td></tr>'+
+  '<tr><td>Indirect</td><td>Pending</td><td>—</td><td>—</td></tr>'+
+  '<tr><td>Status quo</td><td>What customers do today</td><td>—</td><td>Manual process / incumbent</td></tr>'+
+  '<tr><td>BigCo threat</td><td>Pending</td><td>—</td><td>—</td></tr></table>'+
+  '<div class="callout warn">Critical: verify what '+c+' says about competition vs what\'s actually true.</div>';
+}
+
+function renderProcessSection(){
+  return '<div class="kicker">5 · PROCESS & ROUND INTEL</div><h1>Where is the round?</h1>'+
+  '<table class="data-table"><tr><th>Detail</th><th>Status</th></tr>'+
+  '<tr><td>Round status</td><td>'+(R.ask?'Open — '+R.ask:'Unknown')+'</td></tr>'+
+  '<tr><td>Lead status</td><td>'+(R.leadInvestor||'Unknown')+'</td></tr>'+
+  '<tr><td>Other investors looking</td><td>To be determined on call</td></tr>'+
+  '<tr><td>Decision pressure</td><td>Assess: real deadline vs manufactured urgency</td></tr>'+
+  '<tr><td>Round allocation</td><td>How much taken vs available?</td></tr></table>';
+}
+
+function renderSynthesisSection(){
+  const conf=DEAL_FIELDS.filter(k=>R[k]).length;
+  return '<div class="kicker">6 · PRE-CALL SYNTHESIS</div><h1>Write this before the call.</h1>'+
+  '<div class="h2">What I know with confidence ('+conf+' data points)</div>'+
+  '<div class="callout insight">'+DEAL_FIELDS.filter(k=>R[k]).map(k=>'<strong>'+k+':</strong> '+R[k]).join('<br>')+'</div>'+
+  '<div class="h2">What I\'m tentative on</div>'+
+  '<div class="callout warn">These are low-confidence judgments that need validation on the call or through agent enrichment. Run the pipeline to strengthen these.</div>'+
+  '<div class="h2">What I cannot answer from public sources</div>'+
+  '<div class="callout danger">These become your call questions. The Call Prep tab will help you select the highest-signal questions from the playbook.</div>'+
+  '<div class="h2">Top 3 Risks (from public research)</div>'+
+  '<table class="data-table"><tr><th>#</th><th>Risk</th><th>Severity</th></tr>'+
+  '<tr><td>1</td><td>To be identified by enrichment agents</td><td>Pending</td></tr>'+
+  '<tr><td>2</td><td>Pending</td><td>Pending</td></tr>'+
+  '<tr><td>3</td><td>Pending</td><td>Pending</td></tr></table>';
+}
+
+// ===== PIPELINE: AGENT DEFINITIONS =====
+function advanceToPipeline(){log('decision','system','Transitioning to enrichment pipeline');go('pipeline');renderPipeline();}
+const AGENTS=[
+  {id:'ingest',name:'Ingest Agent',role:'Validates schema, dedupes vault.',tools:['schema.validate','vault.lookup','record.normalize']},
+  {id:'research',name:'Research Agent',role:'Market signals, comps, news. Cites every claim.',tools:['web.search','crunchbase.lookup','news.recent']},
+  {id:'team',name:'Team Agent',role:'Founder scoring: domain fit, exits, velocity.',tools:['linkedin.profile','github.activity','team.score']},
+  {id:'unit',name:'Unit-Econ Agent',role:'Bottoms-up: ARR, GM, CAC, burn, runway.',tools:['model.build','sensitivity.run','benchmark.compare']},
+  {id:'competition',name:'Competition Agent',role:'Named competitors, moat analysis, positioning.',tools:['competitor.scan','moat.assess','positioning.map']},
+  {id:'risk',name:'Risk Agent',role:'Kill risks, mitigants, regulatory exposure.',tools:['risk.identify','regulatory.scan','mitigant.assess']}
+];
+
+function renderPipeline(){
+  $('pipeStatus').textContent='Loaded: '+(R.company||'Unknown')+' ('+(R.stage||'')+' '+(R.sector||'')+')';
+  $('agentList').innerHTML=AGENTS.map(a=>'<div class="agent-card" id="ac-'+a.id+'"><h3>'+a.name+'<span class="badge" id="ab-'+a.id+'">IDLE</span></h3><p class="role">'+a.role+'</p><div class="meta">'+a.tools.join(' · ')+'</div><div class="logbox" id="al-'+a.id+'"></div><div class="ev-grid" id="ae-'+a.id+'"></div></div>').join('');
+}
+
+async function runAll(){
+  $('memoBtn').disabled=true;enrichData={};
+  log('decision','system','Pipeline started: '+R.company);
+  for(const a of AGENTS){await runAgent(a)}
+  log('decision','system','All '+AGENTS.length+' agents complete');$('memoBtn').disabled=false;
+  $('pipeStatus').textContent='All agents complete. Ready to generate IC memo.';
+}
+
+async function runAgent(a){
+  const badge=$('ab-'+a.id);const logEl=$('al-'+a.id);const evEl=$('ae-'+a.id);
+  badge.textContent='RUNNING';badge.className='badge run';logEl.className='logbox show';logEl.textContent='';
+  log('agent',a.name,'Agent booting');
+  const alog=(m)=>{logEl.textContent+='['+ts()+'] '+m+'\n';logEl.scrollTop=logEl.scrollHeight};
+  alog('boot: '+(R.company||'deal'));
+  for(const t of a.tools){await sleep(350+Math.random()*500);alog('  -> '+t+'() ... ok');log('tool',a.name,'Tool call: '+t+'()');}
+  await sleep(200);
+  // Generate evidence based on agent type
+  const ev=generateEvidence(a.id);
+  enrichData[a.id]=ev;
+  ev.forEach(e=>{log('evidence',a.name,'Evidence: '+e.k+' = '+e.v)});
+  evEl.innerHTML=ev.map(e=>'<div class="ev"><b>'+e.k+'</b>'+e.v+'</div>').join('');
+  alog('[done] '+ev.length+' evidence items');
+  log('decision',a.name,'Agent complete: '+ev.length+' evidence items');
+  badge.textContent='COMPLETE';badge.className='badge ok';
+}
+
+function generateEvidence(id){
+  const filled=DEAL_FIELDS.filter(k=>R[k]).length;
+  switch(id){
+    case 'ingest':return [
+      {k:'Schema',v:'valid'},
+      {k:'Dupes',v:'none'},
+      {k:'Completeness',v:Math.round(filled/DEAL_FIELDS.length*100)+'%'}
+    ];
+    case 'research':return [
+      {k:'Status',v:'Research agent not connected'},
+      {k:'TAM',v:'Requires web search tools'},
+      {k:'Comps',v:'Requires Crunchbase / Pitchbook access'},
+      {k:'News',v:'Requires news search tools'}
+    ];
+    case 'team':return [
+      {k:'Status',v:'Team agent not connected'},
+      {k:'Domain Fit',v:'Requires LinkedIn profile access'},
+      {k:'Velocity',v:'Requires GitHub activity data'}
+    ];
+    case 'unit':return [
+      {k:'ARR',v:R.arr?'$'+Number(R.arr).toLocaleString():'Not provided'},
+      {k:'MoM Growth',v:R.mom?R.mom+'%':'Not provided'},
+      {k:'NRR',v:R.nrr?R.nrr+'%':'Not provided'},
+      {k:'Status',v:'GM, CAC, burn multiple require financial model upload'}
+    ];
+    case 'competition':return [
+      {k:'Status',v:'Competition agent not connected'},
+      {k:'Comps',v:'Requires market research tools'},
+      {k:'Moat',v:'Requires competitive analysis'}
+    ];
+    case 'risk':return [
+      {k:'Status',v:'Risk agent not connected'},
+      {k:'Framework',v:'Risk analysis requires research agent output'}
+    ];
+    default:return [];
+  }
+}
+
+function resetPipe(){enrichData={};renderPipeline();$('memoBtn').disabled=true;log('decision','system','Pipeline reset');}
+
+// ===== QUESTION BANK =====
+const QUESTIONS=[
+  {cat:'A. Founder-Market Fit',items:[
+    {id:'A1',q:'What\'s the deepest insight about this market that your competitors don\'t have?',test:'Tests proprietary insight vs generic founder'},
+    {id:'A2',q:'Why are you the right person to build this — beyond the obvious resume answer?',test:'Tests self-awareness about founder-market fit'}
+  ]},
+  {cat:'B. Customer Truth',items:[
+    {id:'B1',q:'Walk me through your most recent customer win — who, why they bought, what they\'re doing with it.',test:'Tests whether they actually talk to customers'},
+    {id:'B2',q:'Tell me about your most frustrated customer in the last 90 days.',test:'Tests customer relationship depth, intellectual honesty'},
+    {id:'B3',q:'Walk me through the actual buying process — what do they consider, what do they reject?',test:'Tests competitive awareness, sales sophistication'}
+  ]},
+  {cat:'C. Intellectual Honesty',items:[
+    {id:'C1',q:'What\'s the one thing that, if it turned out to be wrong, would kill this business?',test:'Tests self-awareness, ability to articulate thesis'},
+    {id:'C2',q:'What would I find in DD that you\'d want me to hear from you first?',test:'Tests transparency, integrity signal'},
+    {id:'C3',q:'What\'s the strongest bear case against this company?',test:'Tests whether they\'ve stress-tested their own thesis'}
+  ]},
+  {cat:'D. Competition & Why-Now',items:[
+    {id:'D1',q:'Why hasn\'t this been built before? What changed in the last 18 months?',test:'Tests understanding of structural opportunity'},
+    {id:'D2',q:'If [BigCo] decides to build this next quarter, what happens to you?',test:'Tests defensibility thinking, moat self-awareness'}
+  ]},
+  {cat:'E. Capital & Round',items:[
+    {id:'E1',q:'How did you decide on this round size, and what specifically does it get you to?',test:'Tests capital efficiency thinking, milestone discipline'},
+    {id:'E2',q:'What would have to be true for you to walk away from a term sheet?',test:'Tests leverage, standards, founder ownership protection'}
+  ]},
+  {cat:'F. Team',items:[
+    {id:'F1',q:'What was your hardest hire to date — who, what, what did you learn?',test:'Tests team-building skill, self-reflection'},
+    {id:'F2',q:'Tell me about the last serious disagreement with your co-founder and how you resolved it.',test:'Tests co-founder relationship durability'}
+  ]}
+];
+
+function renderQuestionBank(){
+  $('questionBank').innerHTML=QUESTIONS.map(cat=>'<div class="q-cat"><h4>'+cat.cat+'</h4>'+cat.items.map(q=>'<div class="q-item'+(selectedQs.has(q.id)?' selected':'')+'" onclick="toggleQ(\''+q.id+'\',this)"><div class="q-check">'+(selectedQs.has(q.id)?'✓':'')+'</div><div><div class="q-text">'+q.q+'</div><div class="q-test">'+q.test+'</div></div></div>').join('')+'</div>').join('');
+  $('qCount').textContent=selectedQs.size+'/6 selected';
+}
+function toggleQ(id,el){
+  if(selectedQs.has(id)){selectedQs.delete(id)}else{if(selectedQs.size>=6)return;selectedQs.add(id)}
+  log('callprep','call-prep','Question '+(selectedQs.has(id)?'selected':'deselected')+': '+id);
+  renderQuestionBank();
+}
+
+// ===== IC MEMO GENERATOR =====
+function generateMemo(){
+  log('memo','memo-agent','Generating IC Investment Memo');go('memo');
+  const c=R.company||'Company';const s=R.sector||'Tech';const st=R.stage||'Seed';
+  const re=enrichData.research||[];const te=enrichData.team||[];const ue=enrichData.unit||[];const ce=enrichData.competition||[];const ri=enrichData.risk||[];
+  const getV=(arr,k)=>{const f=arr.find(e=>e.k===k);return f?f.v:'—'};
+  
+  const chapters=[
+    {id:'thesis',title:'Investment Thesis',html:'<div class="kicker">THESIS</div><h1>Why '+c+'.</h1><p class="lede">'+st+'-stage '+s+'. '+(R.thesis||'Thesis pending.')+'</p><div class="ev-grid"><div class="ev"><b>Ask</b>'+(R.ask||'—')+'</div><div class="ev"><b>Stage</b>'+st+'</div><div class="ev"><b>Sector</b>'+s+'</div></div><div class="callout insight"><strong>Core thesis:</strong> '+(R.thesis||'Not yet articulated')+'</div>'},
+    {id:'market',title:'Market',html:'<div class="kicker">MARKET</div><h1>Is the market real?</h1><p class="lede">Markets matter more than ideas. Evidence for structural attractiveness.</p><div class="ev-grid"><div class="ev"><b>TAM</b>'+getV(re,'TAM')+'</div><div class="ev"><b>CAGR</b>'+getV(re,'CAGR')+'</div><div class="ev"><b>Sources</b>'+getV(re,'Sources')+'</div></div><div class="callout insight">'+c+' is positioned in the '+s+' market with '+getV(re,'Comps')+' comparables identified.</div>'},
+    {id:'team',title:'Team',html:'<div class="kicker">TEAM</div><h1>Who is building this?</h1><p class="lede">'+(R.founders||'Founder details pending.')+'</p><div class="ev-grid"><div class="ev"><b>Domain Fit</b>'+getV(te,'Domain Fit')+'</div><div class="ev"><b>Avg Experience</b>'+getV(te,'Avg Experience')+'</div><div class="ev"><b>Dev Velocity</b>'+getV(te,'Velocity')+'</div></div>'},
+    {id:'uniteco',title:'Unit Economics',html:'<div class="kicker">UNIT ECONOMICS</div><h1>Do the numbers work?</h1><div class="ev-grid"><div class="ev"><b>ARR</b>'+getV(ue,'ARR')+'</div><div class="ev"><b>Gross Margin</b>'+getV(ue,'Gross Margin')+'</div><div class="ev"><b>CAC Payback</b>'+getV(ue,'CAC Payback')+'</div><div class="ev"><b>Burn Multiple</b>'+getV(ue,'Burn Multiple')+'</div><div class="ev"><b>Runway</b>'+getV(ue,'Runway')+'</div><div class="ev"><b>LTV/CAC</b>'+getV(ue,'LTV/CAC')+'</div></div>'},
+    {id:'comp',title:'Competition',html:'<div class="kicker">COMPETITION</div><h1>Named, not vague.</h1><div class="ev-grid"><div class="ev"><b>Direct Comps</b>'+getV(ce,'Direct Comps')+'</div><div class="ev"><b>Moat Type</b>'+getV(ce,'Moat Type')+'</div><div class="ev"><b>Positioning</b>'+getV(ce,'Positioning')+'</div><div class="ev"><b>BigCo Risk</b>'+getV(ce,'BigCo Risk')+'</div></div>'},
+    {id:'risks',title:'Risks',html:'<div class="kicker">RISKS</div><h1>What could kill this?</h1><table class="data-table"><tr><th>Risk</th><th>Assessment</th><th>Mitigant</th></tr><tr><td>'+getV(ri,'Kill Risk #1')+'</td><td>High</td><td>'+getV(ri,'Mitigants')+'</td></tr><tr><td>'+getV(ri,'Kill Risk #2')+'</td><td>Medium</td><td>Differentiated product</td></tr><tr><td>'+getV(ri,'Kill Risk #3')+'</td><td>Medium</td><td>'+getV(ri,'Reg Exposure')+' environment</td></tr></table>'},
+    {id:'verdict',title:'IC Recommendation',html:'<div class="kicker">VERDICT</div><h1>IC recommendation.</h1><div class="verdict-card"><h3>RECOMMENDATION</h3><p>Based on '+Object.keys(enrichData).length+' enrichment agents and '+DEAL_FIELDS.filter(k=>R[k]).length+' deal fields, this analysis supports <strong>advancing '+c+' to due diligence</strong>.</p><p class="cond"><strong>Conditions:</strong> Successful founder call, customer reference checks, financial model validation.</p><p class="cond"><strong>Evidence base:</strong> '+trace.length+' logged events across '+sources.length+' sources.</p></div>'}
+  ];
+  $('memoPills').innerHTML=chapters.map((ch,i)=>'<div class="pill'+(i===0?' active':'')+'" onclick="scrollMemo(\''+ch.id+'\')">'+(ch.title)+'</div>').join('');
+  $('memoTitle').innerHTML='<div class="kicker">IC PRE-READ · INVESTMENT MEMO</div><h1>'+c+'</h1><p class="lede">'+st+' '+s+' • '+(R.ask||'Ask TBD')+' • Prepared by DealLens for Marketlogic Investors</p>';
+  $('memoBody').innerHTML=chapters.map(ch=>'<div class="chapter" id="memo-'+ch.id+'">'+ch.html+'</div>').join('');
+  log('memo','memo-agent','IC Memo generated with '+chapters.length+' chapters');
+}
+function scrollMemo(id){document.getElementById('memo-'+id)?.scrollIntoView({behavior:'smooth'});$('memoPills').querySelectorAll('.pill').forEach(p=>p.classList.toggle('active',p.textContent.toLowerCase().includes(id.substring(0,4))));}
+
+// ===== LOGS RENDERER =====
+function renderLogs(){
+  const types=['all','intake','agent','tool','evidence','decision','memo','callprep'];
+  const counts={};
+  types.forEach(t=>{counts[t]=t==='all'?trace.length:trace.filter(e=>e.type===t).length});
+  $('logStats').innerHTML=Object.entries(counts).map(([k,v])=>'<div class="log-stat"><b>'+k.toUpperCase()+'</b><div class="num">'+v+'</div></div>').join('');
+  $('traceFilters').innerHTML=types.map(t=>'<div class="filter-pill'+(traceFilter===t?' active':'')+'" onclick="setTraceFilter(\''+t+'\')">'+ t+'</div>').join('');
+  const filtered=traceFilter==='all'?trace:trace.filter(e=>e.type===traceFilter);
+  $('traceList').innerHTML=filtered.map(e=>'<div class="trace-item"><div class="t-time">'+e.time+'</div><div class="t-icon '+e.type.charAt(0).toUpperCase()+'">'+e.type.charAt(0).toUpperCase()+'</div><div class="t-body"><div class="t-label">'+e.type.toUpperCase()+' · '+e.agent.toUpperCase()+'</div><div class="t-msg">'+e.msg+'</div>'+(e.detail?'<div class="t-detail" onclick="this.textContent=this.textContent===\'show detail\'?\''+ e.detail+'\':\'show detail\'">show detail</div>':'')+'</div></div>').join('');
+}
+function setTraceFilter(f){traceFilter=f;renderLogs();}
+function dlFile(n,c,t){var b=new Blob([c],{type:t||'text/markdown'});var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=n;document.body.appendChild(a);a.click();document.body.removeChild(a)}
+function exportMemoDoc(){var c=R.company||'Deal';var d=new Date().toLocaleDateString();var N=String.fromCharCode(10);var m=['# IC Investment Memo: '+c,N,'Prepared by DealLens for Marketlogic Investors','Date: '+d,'Stage: '+(R.stage||'TBD')+' | Sector: '+(R.sector||'TBD')+' | Ask: '+(R.ask||'TBD'),N,'---',N,'## 1. Investment Thesis',N,(R.thesis||'Thesis pending.'),N];var ag=['research','team','uniteco','competition','risk'];var ti=['Market','Team','Unit Economics','Competition','Risks'];ag.forEach(function(a,i){m.push('## '+(i+2)+'. '+ti[i],N);(enrichData[a]||[]).forEach(function(e){m.push('- **'+e.label+':** '+e.value)});m.push(N)});m.push('## 7. IC Recommendation',N,'Based on '+Object.keys(enrichData).length+' enrichment agents, this analysis supports advancing '+c+' to due diligence.',N,'Conditions: Successful founder call, customer reference checks, financial model validation.','Evidence base: '+trace.length+' logged events across '+sources.length+' sources.');dlFile('IC_Memo_'+c.replace(/\s+/g,'_')+'.md',m.join(N))}
+function exportThesisDoc(){var c=R.company||'Deal';var N=String.fromCharCode(10);var m=['# Industry Thesis: '+c,N,'Sector: '+(R.sector||'TBD'),'Stage: '+(R.stage||'TBD'),N];['research','competition','risk','team','uniteco'].forEach(function(a){m.push('## '+a.charAt(0).toUpperCase()+a.slice(1),N);(enrichData[a]||[]).forEach(function(e){m.push('- **'+e.label+':** '+e.value)});m.push(N)});dlFile('Industry_Thesis_'+c.replace(/\s+/g,'_')+'.md',m.join(N))}
+function exportAuditTrail(){var c=R.company||'Deal';var N=String.fromCharCode(10);var m=['# Audit Trail: '+c,N,'Total Events: '+trace.length,'Sources: '+sources.length,N,'## Deal Record',N];Object.entries(R).forEach(function(p){if(p[1])m.push('- **'+p[0]+':** '+p[1])});m.push(N,'## Agent Evidence',N);Object.entries(enrichData).forEach(function(p){m.push('### '+p[0],N);(p[1]||[]).forEach(function(e){m.push('- **'+e.label+':** '+e.value)});m.push(N)});m.push('## Decision Trace',N);trace.forEach(function(e){m.push('- ['+e.time+'] '+e.type+' ('+e.agent+'): '+e.msg)});dlFile('Audit_Trail_'+c.replace(/\s+/g,'_')+'.md',m.join(N))}
+function exportLogs(){const blob=new Blob([JSON.stringify({deal:R,sources:sources.length,trace:trace},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='deallens-trace-'+(R.company||'deal')+'.json';a.click();}
+
+// ===== INIT =====
+log('decision','system','App initialized');
+renderDealFields();updateExtractProgress();
+
+// Fix nav highlighting
+function go(v){
+  document.querySelectorAll('.view').forEach(e=>e.classList.remove('show'));
+  $('v-'+v).classList.add('show');
+  document.querySelectorAll('nav a').forEach(a=>a.classList.remove('on'));
+  const navMap={intake:0,dossier:1,pipeline:2,callprep:3,memo:4,logs:5};
+  document.querySelectorAll('nav a')[navMap[v]]?.classList.add('on');
+  log('decision','system','Navigated to '+v);
+  if(v==='logs')renderLogs();
+  if(v==='callprep')renderQuestionBank();if(v==='pipeline'&&R.company)renderPipeline();if(v==='dossier'&&R.company)buildDossier();
+  window.scrollTo(0,0);
+}
+</script></body></html>

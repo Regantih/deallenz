@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>DealLens · Marketlogic Investors LLC</title>
+<meta name="description" content="DealLens v2 — a 14-chapter scrollytelling investment memo for Marketlogic Investors LLC." />
+<style>
+:root{--canvas:#f5f1e8;--ink:#1a1a1a;--muted:#5b5650;--accent:#2f6b4f;--rule:#1a1a1a;--card:#fffdf8;--callout:#e8f0eb;}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--canvas);color:var(--ink);font-family:Georgia,'Source Serif Pro',serif;line-height:1.6;-webkit-font-smoothing:antialiased}
+.mono,code,pre{font-family:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace}
+header.topnav{position:sticky;top:0;z-index:50;background:var(--canvas);border-bottom:1px solid var(--rule);}
+.topnav-inner{max-width:980px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-family:Inter,system-ui,sans-serif;font-size:15px;letter-spacing:.02em}
+.brand .logo{width:22px;height:22px;display:inline-block;background:var(--ink);border-radius:3px;position:relative}
+.brand .logo:after{content:"";position:absolute;inset:5px;border:2px solid var(--canvas);border-radius:2px}
+.pills{display:flex;gap:6px;flex-wrap:wrap;font-family:Inter,system-ui,sans-serif;font-size:12px}
+.pill{padding:4px 10px;border:1px solid var(--rule);border-radius:14px;color:var(--ink);text-decoration:none;background:transparent;cursor:pointer;white-space:nowrap}
+.pill.active{background:var(--ink);color:var(--canvas)}
+.act-label{font-size:10px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;margin-right:2px}
+main{max-width:720px;margin:0 auto;padding:48px 20px 120px}
+.hero{padding:36px 0 24px;border-bottom:1px solid var(--rule);margin-bottom:48px}
+.hero h1{font-size:44px;line-height:1.15;margin:0 0 12px;letter-spacing:-.01em}
+.hero p{font-size:18px;color:var(--muted);margin:0}
+section.chapter{padding:56px 0;border-bottom:1px dashed #d8d2c4}
+.chapter .num{font-family:Inter,system-ui,sans-serif;font-size:11px;letter-spacing:.18em;color:var(--accent);text-transform:uppercase;margin-bottom:10px}
+.chapter h2{font-size:30px;line-height:1.2;margin:0 0 18px;letter-spacing:-.005em}
+.chapter p{margin:0 0 14px;font-size:17px}
+.card{background:var(--card);border:1px solid var(--rule);border-radius:6px;padding:18px 20px;margin:18px 0;box-shadow:0 1px 0 #e6dfce}
+.code-card{font-family:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;font-size:13px;background:var(--card);border:1px solid var(--rule);border-radius:6px;padding:14px 16px;overflow-x:auto;white-space:pre}
+.callout{background:var(--callout);border-left:3px solid var(--accent);padding:14px 16px;border-radius:0 6px 6px 0;font-size:15px;margin:18px 0}
+.cite{font-family:Inter,system-ui,sans-serif;font-size:11px;color:var(--muted);letter-spacing:.04em}
+.kv{display:grid;grid-template-columns:max-content 1fr;gap:6px 14px;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:13px}
+.kv b{font-weight:600}
+footer{max-width:720px;margin:60px auto 40px;padding:0 20px;font-family:Inter,system-ui,sans-serif;font-size:12px;color:var(--muted);text-align:center}
+@media (max-width:640px){.hero h1{font-size:34px}.chapter h2{font-size:24px}.pills{font-size:11px}}
+</style>
+</head>
+<body>
+<header class="topnav">
+  <div class="topnav-inner">
+    <div class="brand"><span class="logo"></span><span>DealLens · Marketlogic Investors</span></div>
+    <nav class="pills" id="pills">
+      <span class="act-label">Why</span>
+      <a class="pill" href="#customer">Customer</a><a class="pill" href="#problem">Problem</a><a class="pill" href="#solution">Solution</a>
+      <span class="act-label">What</span>
+      <a class="pill" href="#company">Company</a><a class="pill" href="#market">Market</a><a class="pill" href="#competition">Comp</a>
+      <span class="act-label">Who</span>
+      <a class="pill" href="#team">Team</a>
+      <span class="act-label">How</span>
+      <a class="pill" href="#traction">Traction</a><a class="pill" href="#moat">Moat</a><a class="pill" href="#macro">Macro</a><a class="pill" href="#micro">Micro</a><a class="pill" href="#geo">Geo</a>
+      <span class="act-label">So-what</span>
+      <a class="pill" href="#risks">Risks</a><a class="pill" href="#verdict">Verdict</a>
+    </nav>
+  </div>
+</header>
+<main>
+  <div class="hero">
+    <h1>A scrollytelling investment memo.</h1>
+    <p>Fourteen chapters across five acts — from customer truth to capital decision.</p>
+  </div>
+  <section class="chapter" id="customer"><div class="num">01 · Act I · Why</div><h2>The Customer</h2><p>Who exactly buys, why now, and what they would pay if the product simply existed. We anchor the entire memo to a single ICP and a job-to-be-done.</p><div class="card"><div class="kv"><b>ICP</b><span>mid-market head of finance, 200–2,000 FTE</span><b>JTBD</b><span>close month-end faster than the calendar can punish me</span><b>WTP</b><span>~$24k/yr at the seat-of-pants stage</span></div></div><div class="callout">Insight — willingness-to-pay tracks pain frequency, not company size. <span class="cite">[autoresearch:cust-001]</span></div></section>
+  <section class="chapter" id="problem"><div class="num">02 · Act I · Why</div><h2>The Problem</h2><p>Quantify the pain in dollars, hours, or incidents. The status quo is the real competitor.</p><div class="code-card">status_quo_cost = hours_lost × fully_loaded_rate + error_rate × incident_cost</div><div class="callout">Status-quo cost for the ICP averages $1.2M/yr. <span class="cite">[autoresearch:prob-014]</span></div></section>
+  <section class="chapter" id="solution"><div class="num">03 · Act I · Why</div><h2>The Solution</h2><p>The wedge: the one defensible insight the team has that the rest of the market does not.</p><div class="card">Annotated product flow lives here — input → inference → audit-ready output, with one human checkpoint.</div></section>
+  <section class="chapter" id="company"><div class="num">04 · Act II · What</div><h2>The Company</h2><p>Founding story, thesis pin, stage, ask. Two lines, no fluff.</p><div class="callout">Stage: Series A · Ask: $12M at $60M post · Use of funds: GTM (60%), R&D (30%), G&A (10%).</div></section>
+  <section class="chapter" id="market"><div class="num">05 · Act II · What</div><h2>The Market</h2><p>TAM/SAM/SOM with sourced numbers, segmentation, growth rate.</p><div class="code-card">TAM $48B · SAM $9.2B · SOM $640M · CAGR 17%</div><div class="callout">Segmentation: 62% mid-market, 28% enterprise, 10% upper SMB. <span class="cite">[autoresearch:mkt-022]</span></div></section>
+  <section class="chapter" id="competition"><div class="num">06 · Act II · What</div><h2>The Competition</h2><p>Direct, indirect, and substitutes (including the spreadsheet).</p><div class="card">2×2 positioning: depth-of-automation × audit-readiness. The wedge sits in the upper-right quadrant; legacy ERP add-ons sit lower-left.</div></section>
+  <section class="chapter" id="team"><div class="num">07 · Act III · Who</div><h2>The Team</h2><p>Seven-axis radar: domain fit, prior exits, technical depth, GTM, grit, coachability, equity alignment.</p><div class="code-card">domain_fit       █████ 5/5
+prior_exits      ████· 4/5
+technical_depth  █████ 5/5
+gtm              ███·· 3/5
+grit             ████· 4/5
+coachability     ████· 4/5
+equity_alignment █████ 5/5</div></section>
+  <section class="chapter" id="traction"><div class="num">08 · Act IV · How</div><h2>The Traction</h2><p>ARR, retention, NDR, burn multiple, payback.</p><div class="code-card">ARR        $4.6M (+138% YoY)
+NDR        128%
+GRR         94%
+BurnMx     0.9
+Payback   11 mo</div></section>
+  <section class="chapter" id="moat"><div class="num">09 · Act IV · How</div><h2>The Moat</h2><p>Layered defensibility — data, network, regulatory, brand, switching cost.</p><div class="callout">Strongest layer: proprietary labeled audit data accumulated since 2023.</div></section>
+  <section class="chapter" id="macro"><div class="num">10 · Act IV · How</div><h2>The Macro</h2><p>Rates, inflation, capital flows, sector cycle.</p><div class="code-card">Fed funds  4.50%  (FRED, 2026-04)
+CPI YoY    2.7%   (BLS)
+VC dry powder $312B (PitchBook 2026Q1)</div><div class="callout">Rate cuts expected H2 2026 — mid-market software multiples directionally compressed but stabilizing. <span class="cite">[autoresearch:macro-007]</span></div></section>
+  <section class="chapter" id="micro"><div class="num">11 · Act IV · How</div><h2>The Micro</h2><p>Unit economics derived from the data room, formulas locked.</p><div class="code-card">CAC        $14,200
+LTV       $186,000
+LTV/CAC    13.1×
+GM%        82%
+Payback    11 mo</div></section>
+  <section class="chapter" id="geo"><div class="num">12 · Act IV · How</div><h2>The Geopolitics</h2><p>Supply chain, sanctions, data residency, tariffs.</p><div class="callout">No OFAC/EU exposure. Data residency: US-East primary, EU-West for GDPR cohort. Tariff exposure: nil (pure SaaS).</div></section>
+  <section class="chapter" id="risks"><div class="num">13 · Act V · So-what</div><h2>The Risks</h2><p>Heatmap across market, team, tech, regulatory, financial, exit.</p><div class="code-card">market      ●●○○○ low
+team        ●●○○○ low
+tech        ●●●○○ med
+regulatory  ●●○○○ low
+financial   ●●●○○ med
+exit        ●●●○○ med</div></section>
+  <section class="chapter" id="verdict"><div class="num">14 · Act V · So-what</div><h2>The Verdict</h2><p>Composite score and recommendation.</p><div class="callout"><b>Score 8.2 / 10 · Recommendation: INVEST</b><br/>Lead the round at proposed terms; reserve 1.5× for follow-on.</div></section>
+</main>
+<footer>© 2026 Marketlogic Investors LLC · Not investment advice. Internal review only. · <a href="https://github.com/Regantih/deallenz">github.com/Regantih/deallenz</a></footer>
+<script>
+const pills=[...document.querySelectorAll('#pills .pill')];
+const map=new Map(pills.map(p=>[p.getAttribute('href').slice(1),p]));
+const io=new IntersectionObserver((entries)=>{entries.forEach(e=>{if(e.isIntersecting){pills.forEach(p=>p.classList.remove('active'));const p=map.get(e.target.id);if(p)p.classList.add('active');}})},{rootMargin:'-40% 0px -55% 0px'});
+document.querySelectorAll('section.chapter').forEach(s=>io.observe(s));
+</script>
+</body>
+</html>

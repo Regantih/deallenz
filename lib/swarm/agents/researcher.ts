@@ -10,6 +10,7 @@
 
 import type { ModelRouter } from '../../llm';
 import type { SwarmContext, AgentResult } from '../orchestrator';
+import { stripCodeFences } from '../parse-utils';
 
 export interface ResearcherOutput {
   market_summary: string;
@@ -47,11 +48,15 @@ export class ResearcherAgent {
 }
 
 function buildResearchPrompt(ctx: SwarmContext): string {
+  const deckContext = ctx.deal.pitch_deck_text
+    ? `\nHere is the extracted text from the company's pitch deck:\n${ctx.deal.pitch_deck_text}\n`
+    : '';
   return [
     `Deal: ${ctx.deal.name ?? ctx.deal_id}`,
     `Sector: ${ctx.deal.sector ?? 'unknown'}`,
     `Thesis: ${ctx.deal.thesis ?? 'not provided'}`,
     `HQ: ${ctx.deal.hq ?? 'unknown'}`,
+    deckContext,
     '',
     'Research tasks:',
     '1. Summarize the total addressable market (TAM/SAM/SOM) with citations.',
@@ -73,12 +78,12 @@ const RESEARCHER_SYSTEM =
 
 function parseOrFallback(content: string): ResearcherOutput {
   try {
-    const parsed = JSON.parse(content) as Partial<ResearcherOutput>;
+    const parsed = JSON.parse(stripCodeFences(content)) as Partial<ResearcherOutput>;
     if (typeof parsed.market_summary === 'string') return parsed as ResearcherOutput;
   } catch { /* not JSON */ }
 
   return {
-    market_summary: content,
+    market_summary: stripCodeFences(content),
     competitors: [],
     macro_signals: [],
     sources: [],

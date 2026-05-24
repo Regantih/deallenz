@@ -58,6 +58,7 @@ export interface DealRecord {
   submitted_at?: string;
   swarm_output?: SwarmOutput;
   cost_ledger?: CostLedger;
+  pitch_deck_text?: string;
 }
 
 export interface SwarmContext {

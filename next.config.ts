@@ -1,6 +1,7 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ['pdf-parse'],
   // The legacy .html files in the repo root are served as static assets from /public
   // or via the existing GitHub Pages setup — Next.js routes are additive and do not
   // shadow those files.

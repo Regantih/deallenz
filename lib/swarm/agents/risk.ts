@@ -2,11 +2,12 @@
  * RiskAgent
  * Generates a structured risk register and red-flag summary.
  *
- * Uses mid tier (claude-sonnet-4-20250514) for the analysis call.
+ * Uses mid tier (claude-sonnet-4-5-20250929) for the analysis call.
  */
 
 import type { ModelRouter } from '../../llm';
 import type { SwarmContext, AgentResult } from '../orchestrator';
+import { stripCodeFences } from '../parse-utils';
 
 export type RiskSeverity = 'low' | 'medium' | 'high' | 'critical';
 export type RiskCategory =
@@ -59,10 +60,14 @@ export class RiskAgent {
 
 function buildRiskPrompt(ctx: SwarmContext): string {
   const { deal } = ctx;
+  const deckContext = deal.pitch_deck_text
+    ? `\nHere is the extracted text from the company's pitch deck:\n${deal.pitch_deck_text}\n`
+    : '';
   return [
     `Generate a risk register for: ${deal.name ?? ctx.deal_id}`,
     `Stage: ${deal.stage ?? 'unknown'} | Sector: ${deal.sector ?? 'unknown'} | HQ: ${deal.hq ?? 'unknown'}`,
     `Thesis: ${deal.thesis ?? 'not provided'}`,
+    deckContext,
     '',
     'For each risk provide: id (RISK-NN), category, title, description (max 2 sentences), severity, mitigation or null.',
     'Also: red_flags (deal-breaker signals), overall_severity (highest present).',
@@ -76,7 +81,7 @@ const RISK_SYSTEM =
 
 function parseOrFallback(content: string): RiskOutput {
   try {
-    const parsed = JSON.parse(content) as Partial<RiskOutput>;
+    const parsed = JSON.parse(stripCodeFences(content)) as Partial<RiskOutput>;
     if (Array.isArray(parsed.risks)) return parsed as RiskOutput;
   } catch { /* not JSON */ }
 
@@ -84,6 +89,6 @@ function parseOrFallback(content: string): RiskOutput {
     risks: [],
     red_flags: [],
     overall_severity: 'medium',
-    notes: content,
+    notes: stripCodeFences(content),
   };
 }

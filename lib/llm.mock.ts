@@ -22,17 +22,6 @@ import type {
 } from './llm';
 import { resolveTier, estimateUsd, TIER_MODELS } from './llm';
 
-if (
-  typeof process !== 'undefined' &&
-  process.env?.NODE_ENV === 'production' &&
-  process.env?.USE_MOCKS !== 'true'
-) {
-  throw new Error(
-    '[deallenz] MockModelRouter must NOT be used in production. ' +
-      'Real LLM calls require ANTHROPIC_API_KEY (see ENV.md). ' +
-      'Set USE_MOCKS=true only on staging environments.'
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Stub responses (deterministic, clearly labeled)
@@ -82,6 +71,17 @@ export class MockModelRouter implements ModelRouter {
   private ledger: CostLedger;
 
   constructor(deal_id: string) {
+    if (
+      typeof process !== 'undefined' &&
+      process.env?.NODE_ENV === 'production' &&
+      process.env?.USE_MOCKS !== 'true'
+    ) {
+      throw new Error(
+        '[deallenz] MockModelRouter must NOT be used in production. ' +
+          'Real LLM calls require ANTHROPIC_API_KEY (see ENV.md). ' +
+          'Set USE_MOCKS=true only on staging environments.'
+      );
+    }
     this.ledger = {
       deal_id,
       entries: [],
@@ -92,10 +92,14 @@ export class MockModelRouter implements ModelRouter {
   }
 
   async route(params: RouteParams): Promise<LLMResponse> {
-    const tier: ModelTier = resolveTier(params.task_type, {
-      tier_override: params.tier_override,
-      cost_budget_usd: params.cost_budget_usd,
-    });
+    const resolveOptions: {
+      tier_override?: ModelTier;
+      cost_budget_usd?: number;
+    } = {};
+    if (params.tier_override !== undefined) resolveOptions.tier_override = params.tier_override;
+    if (params.cost_budget_usd !== undefined) resolveOptions.cost_budget_usd = params.cost_budget_usd;
+
+    const tier: ModelTier = resolveTier(params.task_type, resolveOptions);
 
     const model = TIER_MODELS[tier].anthropic;
     const [tokensIn, tokensOut] = STUB_TOKEN_COUNTS[params.task_type];

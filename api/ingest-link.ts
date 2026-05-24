@@ -133,7 +133,10 @@ export async function handleIngestLink(
 ): Promise<IngestLinkResponse> {
   const validation = validateIngestRequest(body);
   if (!validation.valid) {
-    return { ok: false, error: validation.error, detail: validation.detail };
+    const res: IngestLinkResponse = { ok: false };
+    if (validation.error !== undefined) res.error = validation.error;
+    if (validation.detail !== undefined) res.detail = validation.detail;
+    return res;
   }
 
   const { url, deal_id } = body as IngestLinkRequest;

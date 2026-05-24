@@ -2,7 +2,7 @@
  * WriterAgent
  * Composes all 14 chapters of the McKinsey-grade investment memo.
  *
- * Uses mid tier (claude-sonnet-4-20250514) for all chapter drafts.
+ * Uses mid tier (claude-sonnet-4-5-20250929) for all chapter drafts.
  * Chapters are processed in parallel batches of 3.
  */
 
@@ -11,6 +11,7 @@ import type { SwarmContext, AgentResult } from '../orchestrator';
 import type { ResearcherOutput } from './researcher';
 import type { AnalystOutput } from './analyst';
 import type { RiskOutput } from './risk';
+import { stripCodeFences } from '../parse-utils';
 
 export const MEMO_CHAPTERS = [
   { id: 'customer', number: '01', act: 'WHY',     title: 'The Customer'             },
@@ -52,7 +53,7 @@ export interface WriterInputs {
   risk: RiskOutput;
 }
 
-const BATCH_SIZE = 3;
+const BATCH_SIZE = 7;
 
 export class WriterAgent {
   constructor(private router: ModelRouter) {}
@@ -100,7 +101,7 @@ export class WriterAgent {
       task_type: 'write',
       system: WRITER_SYSTEM,
       prompt: buildChapterPrompt(ctx, chapter, inputs),
-      max_tokens: 1500,
+      max_tokens: 3000,
     });
 
     return parseChapterDraft(call.content, chapter.id, chapter.title);
@@ -112,11 +113,15 @@ function buildChapterPrompt(
   chapter: (typeof MEMO_CHAPTERS)[number],
   inputs: WriterInputs
 ): string {
+  const deckContext = ctx.deal.pitch_deck_text
+    ? `\nHere is the extracted text from the company's pitch deck:\n${ctx.deal.pitch_deck_text}\n`
+    : '';
   return [
     `Write chapter ${chapter.number}: "${chapter.title}" for the ${ctx.deal.name ?? ctx.deal_id} investment memo.`,
     `Narrative act: ${chapter.act}`,
     '',
     `Deal record (JSON): ${JSON.stringify(ctx.deal)}`,
+    deckContext,
     '',
     `Market research summary: ${inputs.research.market_summary}`,
     `Financial analysis notes: ${inputs.analyst.notes}`,
@@ -127,12 +132,16 @@ function buildChapterPrompt(
     '- Cite every factual claim with [source: URL].',
     '- No invented data, no filler.',
     '- If data is missing, state the gap explicitly.',
-    '- Return JSON: { body: string, data_points: string[], sources: string[], needs_review: boolean }',
+    'CRITICAL OUTPUT FORMAT: Respond with ONLY a raw JSON object. No prose before, no code fences, no text after.',
+    'Format: {"body":"<markdown prose here>","data_points":["..."],"sources":["https://..."],"needs_review":false}',
   ].join('\n');
 }
 
 const WRITER_SYSTEM =
-  'You are the DealLens memo writer. Write investment memo chapters at McKinsey IC quality. ' +
+  'You are the DealLens memo writer. Your ENTIRE response must be a single raw JSON object — ' +
+  'no prose before it, no markdown code fences around it, no text after it. ' +
+  'Output ONLY: {"body":"...","data_points":[...],"sources":[...],"needs_review":false}. ' +
+  'The body field contains McKinsey IC-quality markdown prose (200-400 words). ' +
   'Be precise, direct, and evidence-backed. Every factual claim must cite a source. ' +
   'Never invent data to fill gaps — acknowledge gaps honestly.';
 
@@ -141,26 +150,98 @@ function parseChapterDraft(
   id: ChapterId,
   title: string
 ): ChapterDraft {
+  // Try 1: Full content is JSON (possibly wrapped in outer fences)
+  const stripped = stripCodeFences(content);
   try {
-    const parsed = JSON.parse(content) as Partial<ChapterDraft>;
+    const parsed = JSON.parse(stripped) as Partial<ChapterDraft>;
     if (typeof parsed.body === 'string') {
-      return {
-        id,
-        title,
-        body: parsed.body,
-        data_points: parsed.data_points ?? [],
-        sources: parsed.sources ?? [],
-        needs_review: parsed.needs_review ?? false,
-      };
+      return makeChapter(id, title, parsed);
     }
   } catch { /* not JSON */ }
 
+  // Try 2: LLM embedded a ```json block (with or WITHOUT a closing fence)
+  const jsonFenceMarker = '```json\n';
+  const jsonFenceIdx = content.indexOf(jsonFenceMarker);
+  if (jsonFenceIdx !== -1) {
+    const jsonStart = jsonFenceIdx + jsonFenceMarker.length;
+    let jsonContent = content.slice(jsonStart);
+    // Strip trailing closing fence if present
+    const closingFenceIdx = jsonContent.lastIndexOf('\n```');
+    if (closingFenceIdx !== -1) {
+      jsonContent = jsonContent.slice(0, closingFenceIdx);
+    } else if (jsonContent.endsWith('```')) {
+      jsonContent = jsonContent.slice(0, -3);
+    }
+    // Try full parse first
+    try {
+      const parsed = JSON.parse(jsonContent.trim()) as Partial<ChapterDraft>;
+      if (typeof parsed.body === 'string') {
+        return makeChapter(id, title, parsed);
+      }
+    } catch { /* truncated or malformed JSON */ }
+    // JSON parse failed (likely truncated) — extract body string value directly
+    const bodyStr = extractBodyString(jsonContent);
+    if (bodyStr && bodyStr.length > 50) {
+      return { id, title, body: bodyStr, data_points: [], sources: [], needs_review: true };
+    }
+    // Use prose before the fence if substantial
+    const proseBefore = content.slice(0, jsonFenceIdx).trim();
+    if (proseBefore.length > 100) {
+      return { id, title, body: proseBefore, data_points: [], sources: [], needs_review: true };
+    }
+  }
+
+  // Final fallback: return stripped content (no code fences to remove since no closing fence)
+  return { id, title, body: stripped, data_points: [], sources: [], needs_review: true };
+}
+
+function makeChapter(
+  id: ChapterId,
+  title: string,
+  parsed: Partial<ChapterDraft>
+): ChapterDraft {
   return {
     id,
     title,
-    body: content,
-    data_points: [],
-    sources: [],
-    needs_review: true,
+    body: parsed.body!,
+    data_points: parsed.data_points ?? [],
+    sources: parsed.sources ?? [],
+    needs_review: parsed.needs_review ?? false,
   };
+}
+
+/**
+ * Extract the "body" string value from potentially truncated JSON.
+ * Walks the raw string to handle escaped characters, tolerates missing closing quote.
+ */
+function extractBodyString(jsonContent: string): string | null {
+  const bodyKeyIdx = jsonContent.indexOf('"body"');
+  if (bodyKeyIdx === -1) return null;
+  const colonIdx = jsonContent.indexOf(':', bodyKeyIdx + 6);
+  if (colonIdx === -1) return null;
+  const quoteStart = jsonContent.indexOf('"', colonIdx + 1);
+  if (quoteStart === -1) return null;
+
+  let result = '';
+  let i = quoteStart + 1;
+  while (i < jsonContent.length) {
+    const ch = jsonContent[i];
+    if (ch === '\\' && i + 1 < jsonContent.length) {
+      const next = jsonContent[i + 1];
+      if (next === 'n') result += '\n';
+      else if (next === 't') result += '\t';
+      else if (next === 'r') result += '\r';
+      else if (next === '"') result += '"';
+      else if (next === '\\') result += '\\';
+      else result += next;
+      i += 2;
+    } else if (ch === '"') {
+      return result; // clean end of string
+    } else {
+      result += ch;
+      i++;
+    }
+  }
+  // EOF before closing quote — truncated, return what we have if substantial
+  return result.length > 100 ? result : null;
 }
