@@ -312,9 +312,9 @@ export async function POST(request: NextRequest) {
           toFloat64Array() { return new Float64Array(16); }
         };
       }
-      // Lazy-require so a load failure returns a JSON error instead of crashing the Lambda
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { PDFParse } = require('pdf-parse') as { PDFParse: new (opts: { data: Buffer }) => { getText(): Promise<{ pages: { text: string }[] }>; destroy(): Promise<void> } };
+      // Use dynamic ESM import so Node resolves dist/pdf-parse/esm/pdf.worker.mjs
+      // (the CJS build references a non-existent cjs/pdf.worker.mjs on Vercel Lambda).
+      const { PDFParse } = await import('pdf-parse') as unknown as { PDFParse: new (opts: { data: Buffer }) => { getText(): Promise<{ pages: { text: string }[] }>; destroy(): Promise<void> } };
       const parser = new PDFParse({ data: buffer });
       const result = await parser.getText();
       pagesText = result.pages.map((p) => p.text);
