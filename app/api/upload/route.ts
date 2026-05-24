@@ -292,6 +292,26 @@ export async function POST(request: NextRequest) {
     // Parse PDF page-by-page using the pdf-parse class-based API
     let pagesText: string[] = [];
     try {
+      // Polyfill DOMMatrix for Node.js / Vercel Lambda — required by PDF.js internals.
+      // This is a minimal stub that covers the coordinate-transform calls made during
+      // text extraction; rendering APIs (canvas, WebGL) are not needed.
+      if (typeof globalThis.DOMMatrix === 'undefined') {
+        (globalThis as unknown as Record<string, unknown>).DOMMatrix = class DOMMatrix {
+          a=1; b=0; c=0; d=1; e=0; f=0;
+          is2D=true; isIdentity=true;
+          static fromMatrix() { return new DOMMatrix(); }
+          static fromFloat32Array() { return new DOMMatrix(); }
+          static fromFloat64Array() { return new DOMMatrix(); }
+          multiply() { return new DOMMatrix(); }
+          translate() { return new DOMMatrix(); }
+          scale() { return new DOMMatrix(); }
+          rotate() { return new DOMMatrix(); }
+          inverse() { return new DOMMatrix(); }
+          transformPoint(p: unknown) { return p ?? { x: 0, y: 0 }; }
+          toFloat32Array() { return new Float32Array(16); }
+          toFloat64Array() { return new Float64Array(16); }
+        };
+      }
       // Lazy-require so a load failure returns a JSON error instead of crashing the Lambda
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { PDFParse } = require('pdf-parse') as { PDFParse: new (opts: { data: Buffer }) => { getText(): Promise<{ pages: { text: string }[] }>; destroy(): Promise<void> } };

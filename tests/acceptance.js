@@ -201,7 +201,7 @@ async function test3_anthropic() {
       body: JSON.stringify({
         model: 'claude-sonnet-4-5-20250929',
         max_tokens: 50,
-        messages: [{ role: 'user', content: 'Reply with exactly one word: PING' }],
+        messages: [{ role: 'user', content: 'Reply with exactly the word CONFIRMED and nothing else.' }],
       }),
     });
     
@@ -220,10 +220,10 @@ async function test3_anthropic() {
     
     const data = await r.json();
     const text = data.content?.[0]?.text || '';
-    if (text.toUpperCase().includes('PING')) {
+    if (text.toUpperCase().includes('CONFIRMED')) {
       pass(`Model responded: "${text.trim()}"`);
     } else {
-      fail('Model response', 'contains PING', text.slice(0, 100));
+      fail('Model response', 'contains CONFIRMED', text.slice(0, 100));
     }
   } catch (e) {
     fail('Anthropic API reachable', 'successful response', e.message);
