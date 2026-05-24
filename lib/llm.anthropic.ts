@@ -19,7 +19,7 @@
 import 'server-only';
 import Anthropic from '@anthropic-ai/sdk';
 import * as crypto from 'node:crypto';
-import type { ModelRouter, RouteParams, LLMResponse, CostLedger, CostEntry } from './llm';
+import type { ModelRouter, RouteParams, LLMResponse, CostLedger, CostEntry, ModelTier } from './llm';
 import { resolveTier, estimateUsd, TIER_MODELS } from './llm';
 
 // ---------------------------------------------------------------------------
@@ -53,10 +53,14 @@ export class AnthropicModelRouter implements ModelRouter {
   // -------------------------------------------------------------------------
 
   async route(params: RouteParams): Promise<LLMResponse> {
-    const tier = resolveTier(params.task_type, {
-      tier_override: params.tier_override,
-      cost_budget_usd: params.cost_budget_usd,
-    });
+    const resolveOptions: {
+      tier_override?: ModelTier;
+      cost_budget_usd?: number;
+    } = {};
+    if (params.tier_override !== undefined) resolveOptions.tier_override = params.tier_override;
+    if (params.cost_budget_usd !== undefined) resolveOptions.cost_budget_usd = params.cost_budget_usd;
+
+    const tier = resolveTier(params.task_type, resolveOptions);
 
     const model = TIER_MODELS[tier].anthropic;
     const startMs = Date.now();

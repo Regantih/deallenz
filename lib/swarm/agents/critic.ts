@@ -2,7 +2,7 @@
  * CriticAgent
  * QA pass against a 14-point rubric before the memo is released.
  *
- * Uses mid tier (claude-sonnet-4-20250514).
+ * Uses mid tier (claude-sonnet-4-5-20250929).
  * All 14 rubric items must pass for approved: true.
  * Any blocking item that fails prevents approval.
  */
@@ -10,6 +10,7 @@
 import type { ModelRouter } from '../../llm';
 import type { SwarmContext, AgentResult } from '../orchestrator';
 import type { WriterOutput } from './writer';
+import { stripCodeFences } from '../parse-utils';
 
 export interface RubricItem {
   id: string;
@@ -101,7 +102,7 @@ const CRITIC_SYSTEM =
 
 function parseOrFallback(content: string): CriticOutput {
   try {
-    const parsed = JSON.parse(content) as Partial<CriticOutput>;
+    const parsed = JSON.parse(stripCodeFences(content)) as Partial<CriticOutput>;
     if (Array.isArray(parsed.rubric)) return parsed as CriticOutput;
   } catch { /* not JSON */ }
 

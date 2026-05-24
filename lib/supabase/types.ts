@@ -263,6 +263,65 @@ export interface Database {
         };
         Relationships: [];
       };
+
+      // ------------------------------------------------------------------
+      // documents
+      // ------------------------------------------------------------------
+      documents: {
+        Row: {
+          id: string;
+          user_id: string | null;
+          name: string;
+          file_path: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string | null;
+          name: string;
+          file_path: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string | null;
+          name?: string;
+          file_path?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+
+      // ------------------------------------------------------------------
+      // document_pages
+      // ------------------------------------------------------------------
+      document_pages: {
+        Row: {
+          id: string;
+          document_id: string;
+          page_number: number;
+          content: string;
+          embedding: string | number[] | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          document_id: string;
+          page_number: number;
+          content: string;
+          embedding?: string | number[] | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          document_id?: string;
+          page_number?: number;
+          content?: string;
+          embedding?: string | number[] | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {

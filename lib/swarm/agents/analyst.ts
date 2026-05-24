@@ -2,13 +2,14 @@
  * AnalystAgent
  * Financial modelling, unit economics, and market sizing.
  *
- * Uses mid tier (claude-sonnet-4-20250514) for the main analysis call.
+ * Uses mid tier (claude-sonnet-4-5-20250929) for the main analysis call.
  * Where inputs are present in the deal record (ARR, MoM, NRR) metrics
  * are computed deterministically without an LLM call.
  */
 
 import type { ModelRouter } from '../../llm';
 import type { SwarmContext, AgentResult } from '../orchestrator';
+import { stripCodeFences } from '../parse-utils';
 
 export interface AnalystOutput {
   cac_usd: number | null;
@@ -28,26 +29,27 @@ export class AnalystAgent {
   async run(ctx: SwarmContext): Promise<AgentResult<AnalystOutput>> {
     ctx.emit('analyst:start', { deal_id: ctx.deal_id });
 
-    const classifyCall = await this.router.route({
-      deal_id: ctx.deal_id,
-      agent: 'analyst',
-      task_type: 'classify',
-      prompt:
-        `Deal: ${ctx.deal.name ?? ctx.deal_id}. ` +
-        `Stage: ${ctx.deal.stage ?? 'unknown'}. ` +
-        `ARR: ${ctx.deal.arr ?? 'unknown'}. ` +
-        `Classify analysis complexity: low | medium | high.`,
-      max_tokens: 64,
-    });
-
-    const analysisCall = await this.router.route({
-      deal_id: ctx.deal_id,
-      agent: 'analyst',
-      task_type: 'analyze',
-      system: ANALYST_SYSTEM,
-      prompt: buildAnalysisPrompt(ctx),
-      max_tokens: 1024,
-    });
+    const [classifyCall, analysisCall] = await Promise.all([
+      this.router.route({
+        deal_id: ctx.deal_id,
+        agent: 'analyst',
+        task_type: 'classify',
+        prompt:
+          `Deal: ${ctx.deal.name ?? ctx.deal_id}. ` +
+          `Stage: ${ctx.deal.stage ?? 'unknown'}. ` +
+          `ARR: ${ctx.deal.arr ?? 'unknown'}. ` +
+          `Classify analysis complexity: low | medium | high.`,
+        max_tokens: 64,
+      }),
+      this.router.route({
+        deal_id: ctx.deal_id,
+        agent: 'analyst',
+        task_type: 'analyze',
+        system: ANALYST_SYSTEM,
+        prompt: buildAnalysisPrompt(ctx),
+        max_tokens: 1024,
+      }),
+    ]);
 
     ctx.emit('analyst:done', {
       deal_id: ctx.deal_id,
@@ -89,10 +91,14 @@ function computeFromDeal(ctx: SwarmContext): AnalystOutput | null {
 
 function buildAnalysisPrompt(ctx: SwarmContext): string {
   const { deal } = ctx;
+  const deckContext = deal.pitch_deck_text
+    ? `\nHere is the extracted text from the company's pitch deck:\n${deal.pitch_deck_text}\n`
+    : '';
   return [
     `Analyze deal: ${deal.name ?? ctx.deal_id}`,
     `ARR: ${deal.arr ?? 'unknown'} | MoM growth: ${deal.mom ?? 'unknown'}% | NRR: ${deal.nrr ?? 'unknown'}%`,
     `Logos: ${deal.logos ?? 'unknown'} | Ask: ${deal.ask ?? 'unknown'} | Pre-money: ${deal.premoney ?? 'unknown'}`,
+    deckContext,
     '',
     'Compute: CAC, LTV, payback months, burn multiple, Rule of 40, TAM, SAM, SOM.',
     'If any input is missing, set that field to null and explain in notes.',
@@ -106,7 +112,7 @@ const ANALYST_SYSTEM =
 
 function parseOrFallback(content: string): AnalystOutput {
   try {
-    const parsed = JSON.parse(content) as Partial<AnalystOutput>;
+    const parsed = JSON.parse(stripCodeFences(content)) as Partial<AnalystOutput>;
     if ('rule_of_40' in parsed) return parsed as AnalystOutput;
   } catch { /* not JSON */ }
 
@@ -114,6 +120,6 @@ function parseOrFallback(content: string): AnalystOutput {
     cac_usd: null, ltv_usd: null, payback_months: null,
     burn_multiple: null, rule_of_40: null,
     tam_usd: null, sam_usd: null, som_usd: null,
-    notes: content,
+    notes: stripCodeFences(content),
   };
 }

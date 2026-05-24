@@ -1,3 +1,6 @@
+import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
+
 /**
  * ModelRouter — MVI (Mixture of Verified Inferences) routing layer.
  *
@@ -13,7 +16,7 @@
  *
  * Default model assignments (PR7):
  *   cheap → claude-haiku-4-5          (researcher, risk classifier)
- *   mid   → claude-sonnet-4-20250514  (analyst, writer, critic)
+ *   mid   → claude-sonnet-4-5-20250929  (analyst, writer, critic)
  *   deep  → claude-opus-4-5           (manual override only)
  */
 
@@ -37,9 +40,9 @@ export type ModelTier = 'cheap' | 'mid' | 'deep';
 
 /** Canonical model IDs per tier, per provider. Updated here when models change. */
 export const TIER_MODELS: Record<ModelTier, { anthropic: string; openai: string }> = {
-  cheap: { anthropic: 'claude-haiku-4-5',           openai: 'gpt-4o-mini' },
-  mid:   { anthropic: 'claude-sonnet-4-20250514',   openai: 'gpt-4o'      },
-  deep:  { anthropic: 'claude-opus-4-5',            openai: 'o1'          },
+  cheap: { anthropic: 'claude-haiku-4-5',   openai: 'gpt-4o-mini' },
+  mid:   { anthropic: 'claude-sonnet-4-5-20250929',  openai: 'gpt-4o'      },
+  deep:  { anthropic: 'claude-opus-4-5-20250929',    openai: 'o1'          },
 };
 
 /**
@@ -67,7 +70,7 @@ export interface CostEntry {
   deal_id: string;
   agent: string;         // e.g. "researcher", "writer"
   task_type: TaskType;
-  model: string;         // Resolved model string e.g. "claude-sonnet-4-20250514"
+  model: string;         // Resolved model string e.g. "claude-sonnet-4-5-20250929"
   tokens_in: number;
   tokens_out: number;
   usd_cost: number;      // Calculated at call-time from known pricing
@@ -189,4 +192,146 @@ export function estimateUsd(
   };
   const [inRate, outRate] = pricing[tier];
   return (tokensIn / 1_000_000) * inRate + (tokensOut / 1_000_000) * outRate;
+}
+
+export interface LLMOptions {
+  systemPrompt: string;
+  userMessage: string;
+  maxTokens?: number;
+  temperature?: number;
+}
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error('Timeout'));
+    }, timeoutMs);
+    promise
+      .then((res) => {
+        clearTimeout(timer);
+        resolve(res);
+      })
+      .catch((err) => {
+        clearTimeout(timer);
+        reject(err);
+      });
+  });
+}
+
+export async function generateText(options: LLMOptions): Promise<string> {
+  const useLocal = process.env.USE_LOCAL_LLM === 'true';
+  const timeoutMs = parseInt(process.env.LOCAL_LLM_TIMEOUT_MS || '5000', 10);
+
+  if (useLocal) {
+    try {
+      console.log('[LLM] Attempting local generateText...');
+      const openai = new OpenAI({
+        baseURL: process.env.LOCAL_LLM_BASE_URL || 'http://localhost:8000/v1',
+        apiKey: 'not-needed',
+      });
+      const response = await withTimeout(
+        openai.chat.completions.create({
+          model: process.env.LOCAL_LLM_MODEL || 'Qwen/Qwen2.5-7B-Instruct',
+          messages: [
+            { role: 'system', content: options.systemPrompt },
+            { role: 'user', content: options.userMessage },
+          ],
+          max_tokens: options.maxTokens || 1500,
+          temperature: options.temperature ?? 0.7,
+        }),
+        timeoutMs
+      );
+      console.log('[LLM] local');
+      return response.choices[0]?.message?.content || '';
+    } catch (err) {
+      console.warn('[LLM] Local generateText failed, falling back to Anthropic...', err);
+    }
+  }
+
+  // Fallback to Anthropic Claude
+  console.log('[LLM] Attempting Anthropic generateText...');
+  const anthropic = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY,
+  });
+  const response = await anthropic.messages.create({
+    model: 'claude-sonnet-4-5-20250929',
+    max_tokens: options.maxTokens || 1500,
+    temperature: options.temperature ?? 0.7,
+    system: options.systemPrompt,
+    messages: [{ role: 'user', content: options.userMessage }],
+  });
+  console.log('[LLM] claude');
+  return response.content
+    .filter((block) => block.type === 'text')
+    .map((block) => block.text)
+    .join('');
+}
+
+export async function streamText(options: LLMOptions): Promise<ReadableStream> {
+  const useLocal = process.env.USE_LOCAL_LLM === 'true';
+  const timeoutMs = parseInt(process.env.LOCAL_LLM_TIMEOUT_MS || '5000', 10);
+
+  if (useLocal) {
+    try {
+      console.log('[LLM] Attempting local streamText...');
+      const openai = new OpenAI({
+        baseURL: process.env.LOCAL_LLM_BASE_URL || 'http://localhost:8000/v1',
+        apiKey: 'not-needed',
+      });
+      const response = await withTimeout(
+        openai.chat.completions.create({
+          model: process.env.LOCAL_LLM_MODEL || 'Qwen/Qwen2.5-7B-Instruct',
+          messages: [
+            { role: 'system', content: options.systemPrompt },
+            { role: 'user', content: options.userMessage },
+          ],
+          max_tokens: options.maxTokens || 1500,
+          temperature: options.temperature ?? 0.7,
+          stream: true,
+        }),
+        timeoutMs
+      );
+      console.log('[LLM] local');
+      const encoder = new TextEncoder();
+      return new ReadableStream({
+        async start(controller) {
+          for await (const chunk of response) {
+            const text = chunk.choices[0]?.delta?.content || '';
+            if (text) {
+              controller.enqueue(encoder.encode(text));
+            }
+          }
+          controller.close();
+        },
+      });
+    } catch (err) {
+      console.warn('[LLM] Local streamText failed, falling back to Anthropic...', err);
+    }
+  }
+
+  // Fallback to Anthropic Claude
+  console.log('[LLM] Attempting Anthropic streamText...');
+  const anthropic = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY,
+  });
+  const response = await anthropic.messages.create({
+    model: 'claude-sonnet-4-5-20250929',
+    max_tokens: options.maxTokens || 1500,
+    temperature: options.temperature ?? 0.7,
+    system: options.systemPrompt,
+    messages: [{ role: 'user', content: options.userMessage }],
+    stream: true,
+  });
+  console.log('[LLM] claude');
+  const encoder = new TextEncoder();
+  return new ReadableStream({
+    async start(controller) {
+      for await (const chunk of response) {
+        if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
+          controller.enqueue(encoder.encode(chunk.delta.text));
+        }
+      }
+      controller.close();
+    },
+  });
 }
