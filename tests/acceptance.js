@@ -16,7 +16,7 @@ const fs = require('fs');
 const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
 
-const BASE = 'http://localhost:3000';
+const BASE = process.env.TEST_BASE_URL || 'http://localhost:3000';
 const ENV_PATH = path.join(__dirname, '..', '.env.local');
 
 // ── Helpers ──────────────────────────────────────────────
@@ -90,27 +90,33 @@ let uploadedText = '';
 async function test2_upload() {
   console.log('\n── Test 2: PDF Upload Returns Text ──');
   
-  // Find a PDF in ~/Downloads
+  // Find a PDF — prefer small pitch-deck-sized files (<4MB) to stay within
+  // Vercel's 4.5MB serverless body limit when testing against production.
+  const VERCEL_BODY_LIMIT = 4 * 1024 * 1024; // 4MB safety margin
+  const isProd = BASE !== 'http://localhost:3000';
   const downloadsDir = path.join(require('os').homedir(), 'Downloads');
   let pdfPath = null;
-  
-  try {
-    const files = fs.readdirSync(downloadsDir);
-    const pdf = files.find(f => f.toLowerCase().endsWith('.pdf'));
-    if (pdf) pdfPath = path.join(downloadsDir, pdf);
-  } catch {}
-  
+
+  // Preferred small PDFs (known pitch decks)
+  const preferredPaths = [
+    '/home/neuralspark/Downloads/Emerald AI Investment Memo (V2) (2).pdf',
+    '/home/neuralspark/Downloads/emerald_ai_investment_memo_v2.pdf',
+    '/home/neuralspark/Downloads/emerald_ai_investment_memo.pdf',
+  ];
+  for (const p of preferredPaths) {
+    if (fs.existsSync(p)) { pdfPath = p; break; }
+  }
+
+  // Fall back to any PDF in Downloads that fits the size limit (or any on localhost)
   if (!pdfPath) {
-    // Create a minimal test PDF
-    pdfPath = path.join(__dirname, 'test.pdf');
-    // Try to find any PDF on the system
-    const altPaths = [
-      '/home/neuralspark/Downloads/Emerald AI Investment Memo (V2) (2).pdf',
-      '/home/neuralspark/deallens/test.pdf',
-    ];
-    for (const p of altPaths) {
-      if (fs.existsSync(p)) { pdfPath = p; break; }
-    }
+    try {
+      const files = fs.readdirSync(downloadsDir).filter(f => f.toLowerCase().endsWith('.pdf'));
+      for (const f of files) {
+        const p = path.join(downloadsDir, f);
+        const size = fs.statSync(p).size;
+        if (!isProd || size < VERCEL_BODY_LIMIT) { pdfPath = p; break; }
+      }
+    } catch {}
   }
   
   if (!pdfPath || !fs.existsSync(pdfPath)) {

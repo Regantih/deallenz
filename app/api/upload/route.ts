@@ -25,8 +25,6 @@ import type { NextRequest } from 'next/server';
 import { getSupabaseServerClient, getSupabaseAdminClient } from '@/lib/supabase/server';
 import crypto from 'node:crypto';
 import { embedBatch } from '@/lib/embeddings';
-// @ts-ignore
-const { PDFParse } = require('pdf-parse');
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -291,12 +289,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Parse PDF page-by-page using the new mehmet-kozan/pdf-parse class-based API
+    // Parse PDF page-by-page using the pdf-parse class-based API
     let pagesText: string[] = [];
     try {
+      // Lazy-require so a load failure returns a JSON error instead of crashing the Lambda
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { PDFParse } = require('pdf-parse') as { PDFParse: new (opts: { data: Buffer }) => { getText(): Promise<{ pages: { text: string }[] }>; destroy(): Promise<void> } };
       const parser = new PDFParse({ data: buffer });
       const result = await parser.getText();
-      pagesText = result.pages.map((p: any) => p.text);
+      pagesText = result.pages.map((p) => p.text);
       await parser.destroy();
     } catch (parseErr: any) {
       console.error('[api/upload] PDF Parsing error:', parseErr);
