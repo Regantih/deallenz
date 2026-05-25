@@ -22,7 +22,7 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
 }
 
 export async function embed(text: string): Promise<number[]> {
-  const useLocal = process.env.USE_LOCAL_EMBEDDINGS !== 'false';
+  const useLocal = process.env.USE_LOCAL_EMBEDDINGS === 'true';
   const timeoutMs = parseInt(process.env.LOCAL_EMBED_TIMEOUT_MS || '5000', 10);
 
   if (useLocal) {
@@ -49,10 +49,10 @@ export async function embed(text: string): Promise<number[]> {
   }
 
   // Fallback to OpenAI
+  const openaiKey = process.env.OPENAI_API_KEY;
+  if (!openaiKey) throw new Error('OPENAI_API_KEY not configured — embeddings unavailable');
   console.log('[EMBEDDINGS] Attempting OpenAI embeddings...');
-  const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
+  const openai = new OpenAI({ apiKey: openaiKey });
   const response = await openai.embeddings.create({
     model: 'text-embedding-3-small',
     input: text,
@@ -64,7 +64,7 @@ export async function embed(text: string): Promise<number[]> {
 }
 
 export async function embedBatch(texts: string[]): Promise<number[][]> {
-  const useLocal = process.env.USE_LOCAL_EMBEDDINGS !== 'false';
+  const useLocal = process.env.USE_LOCAL_EMBEDDINGS === 'true';
   const timeoutMs = parseInt(process.env.LOCAL_EMBED_TIMEOUT_MS || '5000', 10);
 
   if (useLocal) {
@@ -89,10 +89,10 @@ export async function embedBatch(texts: string[]): Promise<number[][]> {
   }
 
   // Fallback to OpenAI
+  const openaiKey = process.env.OPENAI_API_KEY;
+  if (!openaiKey) throw new Error('OPENAI_API_KEY not configured — embeddings unavailable');
   console.log('[EMBEDDINGS] Attempting OpenAI batch embeddings...');
-  const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
+  const openai = new OpenAI({ apiKey: openaiKey });
   const response = await openai.embeddings.create({
     model: 'text-embedding-3-small',
     input: texts,

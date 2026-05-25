@@ -13,35 +13,51 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing query or documentId' }, { status: 400 });
     }
 
-    // 1. Generate embedding using unified embeddings helper (supports local embeddings server)
-    let queryEmbedding: number[];
+    // 1. Try vector search. If embeddings are unavailable, fall back to full-text page retrieval.
+    let matchedPages: { page_number: number; content: string; similarity?: number }[] = [];
+
+    let embeddingAvailable = false;
     try {
-      queryEmbedding = await embed(query);
-    } catch (embErr: any) {
-      console.error('Failed to generate query embedding:', embErr);
-      return NextResponse.json(
-        { error: 'EMBEDDING_GENERATION_FAILED', detail: embErr.message || 'Failed to generate query embedding.' },
-        { status: 500 }
+      const queryEmbedding = await embed(query);
+      embeddingAvailable = true;
+
+      const { data, error: matchErr } = await supabaseServer.rpc(
+        'match_page_embeddings',
+        {
+          query_embedding: queryEmbedding,
+          match_threshold: 0.2,
+          match_count: 4,
+          filter_document_id: documentId,
+        }
       );
-    }
 
-    // 3. Query Supabase for top 4 relevant pages
-    const { data: matchedPages, error: matchErr } = await supabaseServer.rpc(
-      'match_page_embeddings',
-      {
-        query_embedding: queryEmbedding,
-        match_threshold: 0.2, // Low threshold to get relevant pages
-        match_count: 4,
-        filter_document_id: documentId,
+      if (matchErr) {
+        console.warn('match_page_embeddings RPC error, falling back to full-text:', matchErr.message);
+        embeddingAvailable = false;
+      } else if (data && data.length > 0) {
+        matchedPages = data;
       }
-    );
-
-    if (matchErr) {
-      console.error('Match embeddings RPC error:', matchErr);
-      return NextResponse.json({ error: `Similarity search error: ${matchErr.message}` }, { status: 500 });
+    } catch (embErr: any) {
+      console.warn('[chat] Embedding unavailable, using full-text fallback:', embErr.message);
     }
 
-    if (!matchedPages || matchedPages.length === 0) {
+    // Full-text fallback: fetch first 4 pages ordered by page_number
+    if (!embeddingAvailable || matchedPages.length === 0) {
+      const { data: fallbackPages, error: fbErr } = await supabaseServer
+        .from('document_pages')
+        .select('page_number, content')
+        .eq('document_id', documentId)
+        .order('page_number', { ascending: true })
+        .limit(4);
+
+      if (fbErr) {
+        console.error('Fallback page fetch error:', fbErr);
+      } else if (fallbackPages && fallbackPages.length > 0) {
+        matchedPages = fallbackPages;
+      }
+    }
+
+    if (matchedPages.length === 0) {
       // Return simple fallback stream if no context
       const encoder = new TextEncoder();
       const stream = new ReadableStream({
@@ -62,11 +78,10 @@ export async function POST(req: NextRequest) {
     // Prepare context list for frontend citations and Claude prompt
     const sources = matchedPages.map((page: any) => ({
       page_number: page.page_number,
-      similarity: page.similarity,
+      similarity: page.similarity ?? null,
       snippet: page.content.slice(0, 150) + '...',
     }));
 
-    // Sort sources by page number for clean representation
     sources.sort((a: any, b: any) => a.page_number - b.page_number);
 
     // 4. Assemble Claude Context & Prompt
