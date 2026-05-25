@@ -379,7 +379,7 @@ export function DealChat({ dealId, documentId, onCitationClick }: DealChatProps)
               ))}
             </div>
           </div>
-        ) : () : (
+        ) : (
           messages.map((msg) => (
             <Message
               key={msg.id}
