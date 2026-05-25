@@ -7,24 +7,46 @@
     "build": "next build",
     "start": "next start",
     "type-check": "tsc --noEmit",
-    "type-check:lib": "tsc --project tsconfig.lib.json --noEmit"
+    "type-check:lib": "tsc --project tsconfig.lib.json --noEmit",
+    "fix-rls": "node scratch/fix-rls.js"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.79",
     "@anthropic-ai/sdk": "0.95.1",
+    "@radix-ui/react-accordion": "^1.2.12",
+    "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-slot": "^1.2.4",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "2.49.4",
+    "@tailwindcss/typography": "^0.5.19",
     "@types/pdf-parse": "^1.1.5",
+    "ai": "^6.0.191",
+    "autoprefixer": "^10.5.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "framer-motion": "^12.40.0",
+    "lucide-react": "^1.16.0",
     "next": "15.3.9",
     "openai": "^6.39.0",
     "pdf-parse": "^2.4.5",
+    "pdfjs-dist": "^5.7.284",
+    "postcss": "^8.5.15",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "server-only": "^0.0.1"
+    "react-pdf": "^10.4.1",
+    "server-only": "^0.0.1",
+    "tailwind-merge": "^3.6.0",
+    "tailwindcss": "^3.4.19"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.5",
+    "@eslint/js": "^10.0.1",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "typescript": "^5"
+    "eslint": "^9.39.4",
+    "eslint-config-next": "^16.2.6",
+    "typescript": "^5",
+    "typescript-eslint": "^8.59.4"
   }
 }

@@ -17,6 +17,7 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   // 1. Authenticate caller
   const bypassAuth = request.headers.get('x-bypass-auth') === 'true';
+  // eslint-disable-next-line no-useless-assignment
   let user: { id: string } | null = null;
 
   if (bypassAuth) {

@@ -57,6 +57,7 @@ export async function POST(request: NextRequest) {
   // 1. Authenticate
   // ------------------------------------------------------------------
   const bypassAuth = request.headers.get('x-bypass-auth') === 'true';
+  // eslint-disable-next-line no-useless-assignment
   let user: { id: string } | null = null;
 
   if (bypassAuth) {
@@ -290,6 +291,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse PDF page-by-page using the pdf-parse class-based API
+    // eslint-disable-next-line no-useless-assignment
     let pagesText: string[] = [];
     try {
       // Polyfill DOMMatrix for Node.js / Vercel Lambda — required by PDF.js internals.
@@ -370,7 +372,7 @@ export async function POST(request: NextRequest) {
     // Filter non-empty pages and clean null bytes (\u0000) which are unsupported by Postgres text columns
     const nonEvPages: { pageNumber: number; content: string }[] = [];
     for (let i = 0; i < pagesText.length; i++) {
-      const pageContent = pagesText[i]?.replace(/\u0000/g, '').trim();
+      const pageContent = pagesText[i]?.split('\0').join('').trim();
       if (pageContent) {
         nonEvPages.push({ pageNumber: i + 1, content: pageContent });
       }

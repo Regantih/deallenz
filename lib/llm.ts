@@ -15,7 +15,7 @@ import Anthropic from '@anthropic-ai/sdk';
  * (Upgrade is never automatic; use tier_override to go up intentionally.)
  *
  * Default model assignments (PR7):
- *   cheap → claude-haiku-4-5          (researcher, risk classifier)
+ *   cheap → claude-haiku-4-5-20250929  (researcher, risk classifier)
  *   mid   → claude-sonnet-4-5-20250929  (analyst, writer, critic)
  *   deep  → claude-opus-4-5           (manual override only)
  */
@@ -40,7 +40,7 @@ export type ModelTier = 'cheap' | 'mid' | 'deep';
 
 /** Canonical model IDs per tier, per provider. Updated here when models change. */
 export const TIER_MODELS: Record<ModelTier, { anthropic: string; openai: string }> = {
-  cheap: { anthropic: 'claude-haiku-4-5',   openai: 'gpt-4o-mini' },
+  cheap: { anthropic: 'claude-haiku-4-5-20250929',   openai: 'gpt-4o-mini' },
   mid:   { anthropic: 'claude-sonnet-4-5-20250929',  openai: 'gpt-4o'      },
   deep:  { anthropic: 'claude-opus-4-5-20250929',    openai: 'o1'          },
 };

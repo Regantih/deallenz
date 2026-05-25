@@ -81,7 +81,8 @@ export class AnthropicModelRouter implements ModelRouter {
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       throw new Error(
-        `[deallenz] Anthropic API error (agent=${params.agent}, model=${model}): ${msg}`
+        `[deallenz] Anthropic API error (agent=${params.agent}, model=${model}): ${msg}`,
+        { cause: err }
       );
     }
 

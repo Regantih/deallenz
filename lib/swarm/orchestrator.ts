@@ -165,7 +165,7 @@ export class SwarmOrchestrator {
 
     return {
       ...deal,
-      status: criticResult.output.approved ? 'memo-ready' : 'needs-review',
+      status: criticResult.output.approved ? 'review' : 'review',
       swarm_output: {
         research: researchResult.output,
         analyst: analystResult.output,

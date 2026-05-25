@@ -32,8 +32,9 @@ import { SupabaseStorageClient } from '@/lib/storage.supabase';
 export async function POST(request: NextRequest) {
   // 1. Authenticate
   const supabase = await getSupabaseServerClient();
+  // eslint-disable-next-line no-useless-assignment
   let user: any = null;
-  
+
   const bypassAuth = request.headers.get('x-bypass-auth') === 'true';
   if (bypassAuth) {
     user = { id: 'fd507cde-5765-4e5a-9aaf-27478a6a8625' }; // active test user UUID

@@ -2,7 +2,7 @@
  * ResearcherAgent
  * Web + document retrieval for a deal record.
  *
- * Uses cheap tier (claude-haiku-4-5) as default.
+ * Uses cheap tier (claude-haiku-4-5-20250929) as default.
  * Real web-search integration (Perplexity/Firecrawl) is a future PR.
  * Currently calls the LLM with available deal context; real sources require
  * an external retrieval tool.
