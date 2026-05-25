@@ -181,10 +181,12 @@ function render(d) {
     html.push(`<h3>Swarm Run Failed</h3>`);
     html.push(`<p>Something interrupted the swarm analysis run. Let's try again.</p>`);
     html.push(`<button class="btn" onclick="triggerRun('${d.id}')">⚡ Re-run Swarm Analysis</button>`);
+          html.push(`<div id="run-error" style="display:none;color:#ef4444;font-size:12px;margin-top:8px;"></div>`);
   } else if (run.status === 'done') {
     html.push(`<h3>Swarm Inferences Complete</h3>`);
     html.push(`<p>A 14-point QA rubric was passed. Real-time cost transparency breakdown:</p>`);
     html.push(`<div class="cost-card">
+    
       <strong>LEDGER SUMMARY:</strong><br/>
       • Cumulative Cost: $${run.total_usd?.toFixed(4) || '0.0000'} USD<br/>
       • Inputs/Outputs: ${run.total_tokens_in?.toLocaleString() || 0} in / ${run.total_tokens_out?.toLocaleString() || 0} out tokens<br/>
@@ -263,7 +265,7 @@ function render(d) {
   window.onscroll = () => {
     let current = 'summary';
     sections.forEach(s => {
-      const top = s.offsetTop - 150;
+      const top = s.offsetTop - 80;
       if (window.scrollY >= top) {
         current = s.getAttribute('id');
       }
@@ -293,10 +295,10 @@ async function triggerRun(dealId) {
       load(); // Reload to show running state
     } else {
       const err = await r.json();
-      alert('Failed to trigger Swarm analysis: ' + (err.detail || err.error));
+      const eb=document.getElementById('run-error');if(eb){eb.textContent='Failed to trigger Swarm analysis: '+(err.detail||err.error);eb.style.display='block';}else{alert('Failed to trigger Swarm analysis: ' + (err.detail || err.error));
     }
   } catch (e) {
-    alert('Error connecting to Swarm: ' + e.message);
+    const eb2=document.getElementById('run-error');if(eb2){eb2.textContent='Error connecting to Swarm: '+e.message;eb2.style.display='block';}else{alert('Error connecting to Swarm: ' + e.message);
   }
 }
 
