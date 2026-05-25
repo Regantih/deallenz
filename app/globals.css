@@ -33,3 +33,15 @@
     background: rgba(255, 255, 255, 0.2);
   }
 }
+
+/* react-pdf text layer citation highlight */
+.dl-citation-highlight {
+  background: rgba(99, 102, 241, 0.35) !important;
+  border-radius: 2px;
+  outline: 1px solid rgba(99, 102, 241, 0.5);
+  mix-blend-mode: screen;
+}
+
+.react-pdf__Page__textContent span {
+  cursor: text;
+}

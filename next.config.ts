@@ -1,6 +1,11 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  webpack: (config) => {
+    // pdfjs-dist uses a canvas dep that doesn't exist in Node.js — stub it out
+    config.resolve.alias = { ...config.resolve.alias, canvas: false };
+    return config;
+  },
   // pdf-parse and pdfjs-dist must not be bundled: they load worker .mjs files
   // dynamically at runtime via filesystem paths. Bundling breaks those paths.
   serverExternalPackages: ['pdf-parse', 'pdfjs-dist'],
