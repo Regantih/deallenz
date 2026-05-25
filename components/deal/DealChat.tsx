@@ -358,24 +358,28 @@ export function DealChat({ dealId, documentId, onCitationClick }: DealChatProps)
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-        {messages.length === 0 ? (
+                {!documentId ? (
           <div className="space-y-4">
             <p className="text-xs text-white/30 text-center">
-              No questions yet — start analyzing below
+              No PDF loaded — upload a pitch deck to analyze this deal
             </p>
+          </div>
+        ) : messages.length === 0 ? (
+          <div className="space-y-4">
+            <p className="text-xs text-white/30 text-center">No questions yet — start analyzing below</p>
             <div className="space-y-2">
               {suggestedQuestions.map((q) => (
                 <button
                   key={q}
                   onClick={() => sendMessage(q)}
-                  className="w-full text-left px-3 py-2.5 rounded-lg border border-white/[0.07] bg-white/[0.02] hover:bg-white/[0.05] text-sm text-white/50 hover:text-white/70 transition-colors"
+                  className="w-full text-left px-3 py-2.5 rounded-lg border border-white/[0.07] bg-white/[0.02] hover:bg-white/[0.05] text-xs text-white/60 hover:text-white/80 transition-colors"
                 >
                   {q}
                 </button>
               ))}
             </div>
           </div>
-        ) : (
+        ) : () : (
           messages.map((msg) => (
             <Message
               key={msg.id}
