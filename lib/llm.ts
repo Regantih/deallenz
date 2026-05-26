@@ -15,8 +15,8 @@ import Anthropic from '@anthropic-ai/sdk';
  * (Upgrade is never automatic; use tier_override to go up intentionally.)
  *
  * Default model assignments (PR7):
- *   cheap → claude-haiku-4-5-20250929  (researcher, risk classifier)
- *   mid   → claude-sonnet-4-5-20250929  (analyst, writer, critic)
+ *   cheap → claude-haiku-4-5  (researcher, risk classifier)
+ *   mid   → claude-sonnet-4-5  (analyst, writer, critic)
  *   deep  → claude-opus-4-5           (manual override only)
  */
 
@@ -40,9 +40,9 @@ export type ModelTier = 'cheap' | 'mid' | 'deep';
 
 /** Canonical model IDs per tier, per provider. Updated here when models change. */
 export const TIER_MODELS: Record<ModelTier, { anthropic: string; openai: string }> = {
-  cheap: { anthropic: 'claude-haiku-4-5-20250929',   openai: 'gpt-4o-mini' },
-  mid:   { anthropic: 'claude-sonnet-4-5-20250929',  openai: 'gpt-4o'      },
-  deep:  { anthropic: 'claude-opus-4-5-20250929',    openai: 'o1'          },
+  cheap: { anthropic: 'claude-haiku-4-5',   openai: 'gpt-4o-mini' },
+  mid:   { anthropic: 'claude-sonnet-4-5',  openai: 'gpt-4o'      },
+  deep:  { anthropic: 'claude-opus-4-5',    openai: 'o1'          },
 };
 
 /**
@@ -70,7 +70,7 @@ export interface CostEntry {
   deal_id: string;
   agent: string;         // e.g. "researcher", "writer"
   task_type: TaskType;
-  model: string;         // Resolved model string e.g. "claude-sonnet-4-5-20250929"
+  model: string;         // Resolved model string e.g. "claude-sonnet-4-5"
   tokens_in: number;
   tokens_out: number;
   usd_cost: number;      // Calculated at call-time from known pricing
@@ -254,7 +254,7 @@ export async function generateText(options: LLMOptions): Promise<string> {
     apiKey: process.env.ANTHROPIC_API_KEY,
   });
   const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-5-20250929',
+    model: 'claude-sonnet-4-5',
     max_tokens: options.maxTokens || 1500,
     temperature: options.temperature ?? 0.7,
     system: options.systemPrompt,
@@ -315,7 +315,7 @@ export async function streamText(options: LLMOptions): Promise<ReadableStream> {
     apiKey: process.env.ANTHROPIC_API_KEY,
   });
   const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-5-20250929',
+    model: 'claude-sonnet-4-5',
     max_tokens: options.maxTokens || 1500,
     temperature: options.temperature ?? 0.7,
     system: options.systemPrompt,
