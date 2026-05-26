@@ -21,7 +21,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 /** Routes that are accessible without authentication */
-const PUBLIC_PATH_PREFIXES = ['/login', '/signup', '/auth/callback', '/pricing', '/api/health'];
+const PUBLIC_PATH_PREFIXES = ['/login', '/signup', '/auth/callback', '/pricing', '/api/health', '/try', '/api/try'];
 
 /** File extensions that are always public (static assets) */
 const STATIC_EXT_RE = /\.(html|css|js|map|ico|png|jpg|jpeg|gif|webp|svg|json|woff2?|ttf)$/i;
